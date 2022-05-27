@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+
+shopt -s dotglob
+BACKUP="${HOME}/MegaSync/backup"
+SOURCES=( ~/.ssh                    ~                       ~/local/bin             ~/local/etc )
+BACKUPS=( ${BACKUP}/dotfiles/.ssh   ${BACKUP}/dotfiles	    ${BACKUP}/localbin      ${BACKUP}/localetc )
+RECURSE=( false                     false                   false                   true )
+MASK=(    "*"                       ".[[:word:]]*"          "*"                     "*" )
+CHMOD=(   "--chmod=Fgo-rwx"         ""                      "--chmod=Fugo+rx"       "" )
+
+COMBINE_SOURCE=( ~/.ssh/known_hosts )
+COMBINE_BACKUP=( ${BACKUP}/dotfiles/.ssh/known_hosts )
+
+diff_vscode=false
+STAT="stat"
+update_or_get="--existing" # by default freshen. not get
+
+if hash gstat 2>/dev/null; then
+        STAT="gstat"
+fi
+
+function contains()
+{
+    local -n ARRAY="$1"
+    local ELEMENT
+    ELEMENT="$2"
+    # test if a
+    [[ $(printf '%s:' "${ARRAY[@]}") =~ "$ELEMENT:" ]]
+}
+
+function combine_file()
+{
+    local from="$1"
+    local to="$2"
+    local tmpfile=$(mktemp)
+    sort -u "$from" "$to" > "$tmpfile" || return
+    env mv "$tmpfile" "$to"
+}
+
+function dodiff()
+{
+    local megasyncdir="$1"
+    local localdir="$2"
+    local recurse="$3"
+    local mask="$4"
+
+    echo "Comparing ${localdir} from files in ${megasyncdir}"
+
+    cd "${megasyncdir}" || echo "Can't cd into: ${megasyncdir}"
+    for file in ${mask}; do
+    if [[ -f ${file} ]]; then
+        if [[ -f ${localdir}/${file} ]] && ! contains COMBINE_SOURCE "${localdir}/$file"; then
+        diff=$(diff --ignore-space-change "${localdir}/${file}" "${file}")
+        status=$?
+        if [[ $status -ne 0 ]]; then
+            [[ "$diff_vscode" == "true" ]] && env code -d "${file}" "${localdir}/${file}"
+            printf "  \e[1;33m #### [local] %s <-> [remote] %s\n" "${localdir/#$HOME/~}/${file}" "${file}"
+            echo "$diff" | sed -e "s/^/     /"
+        fi
+        else
+            printf "\e[0;37m ---- %s does not exist\n" "${localdir}/${file}"
+        fi
+    elif [[ -d ${file} && "${recurse}" == "true" ]]; then
+        dodiff "${megasyncdir}/${file}" "${localdir}/${file}" "${recurse}" "${mask}"
+    else
+        local filetype=$($STAT --format=%F ${file})
+        printf "  \e[1;30m ____ Skipping %s: %s\n" "$filetype" "${file}"
+    fi
+    done
+}
+
+function doFullDiff()
+{
+    {
+        for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+            dodiff "${BACKUPS[$i]}" "${SOURCES[$i]}" "${RECURSE[$i]}" "${MASK[$i]}"
+            echo ""
+        done
+    } | less -F
+}
+
+####
+#### TODO: This would all be a bit cleaner by running it all through 1 code path that takes
+####       an array of path 'pairs'.
+####
+
+function showNewerThan()
+{
+    local src="$1"
+    local dest="$2"
+    local recurse="$3"
+    local mask="$4"
+
+    [[ ${recurse} == "true" ]] && recurse="" || recurse="--no-recursive"
+    rsync -aun --checksum ${recurse} --info=name ${update_or_get} "${src}"/${mask} "${dest}" | grep -v "^skipping"
+}
+
+function copyNewerThan()
+{
+    local src="$1"
+    local dest="$2"
+    local recurse="$3"
+    local chmod="$4"
+    local mask="$5"
+
+    [[ ${recurse} == "true" ]] && recurse="" || recurse="--no-recursive"
+
+    rsync -au --checksum ${recurse} $chmod ${update_or_get} --info=name "${src}"/${mask} "${dest}" | grep -v "^skipping"
+}
+
+function doBackup()
+{
+    echo "Files to copy to backup:"
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        showNewerThan "${SOURCES[$i]}" "${BACKUPS[$i]}" "${RECURSE[$i]}" "${MASK[$i]}"
+    done
+
+    echo -n "Update? "
+    read -n 1 -r && [[ $REPLY =~ ^[yY]$ ]] || return
+    echo
+
+    for ((i = 0; i < ${#COMBINE_SOURCE[@]}; ++i)); do
+        combine_file "${COMBINE_SOURCE[$i]}" "${COMBINE_BACKUP[$i]}"
+    done
+
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        copyNewerThan "${SOURCES[$i]}" "${BACKUPS[$i]}" "${RECURSE[$i]}" "${CHMOD[$i]}" "${MASK[$i]}"
+    done
+}
+
+function doFreshen()
+{
+    echo "Files to update from backup:"
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        showNewerThan "${BACKUPS[$i]}" "${SOURCES[$i]}" "${RECURSE[$i]}" "${MASK[$i]}"
+    done
+
+    echo -n "Update? "
+    read -n 1 -r && [[ $REPLY =~ ^[yY]$ ]] || return
+    echo
+
+    for ((i = 0; i < ${#COMBINE_SOURCE[@]}; ++i)); do
+        combine_file "${COMBINE_BACKUP[$i]}" "${COMBINE_SOURCE[$i]}"
+    done
+
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        copyNewerThan "${BACKUPS[$i]}" "${SOURCES[$i]}" "${RECURSE[$i]}" "${CHMOD[$i]}" "${MASK[$i]}"
+    done
+}
+
+function doMerge()
+{
+    echo "Files to copy to backup:"
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        showNewerThan "${SOURCES[$i]}" "${BACKUPS[$i]}" "${RECURSE[$i]}" "${MASK[$i]}"
+    done
+    echo "Files to update from backup:"
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        showNewerThan "${BACKUPS[$i]}" "${SOURCES[$i]}" "${RECURSE[$i]}" "${MASK[$i]}"
+    done
+
+    echo -n "Update? "
+    read -n 1 -r && [[ $REPLY =~ ^[yY]$ ]] || return
+    echo
+
+    for ((i = 0; i < ${#BACKUPS[@]}; ++i)); do
+        copyNewerThan "${SOURCES[$i]}" "${BACKUPS[$i]}" "${RECURSE[$i]}" "${CHMOD[$i]}" "${MASK[$i]}"
+        copyNewerThan "${BACKUPS[$i]}" "${SOURCES[$i]}" "${RECURSE[$i]}" "${CHMOD[$i]}" "${MASK[$i]}"
+    done
+}
+
+function checkDotDiffFresh()
+{
+    local localDot="${BASH_SOURCE[0]}"
+    local backupDot="$BACKUP/localbin/dotdiff"
+
+    [[ -x "$localDot" ]] || { echo "Can't find dotdiff's path to check for update"; exit 3; }
+
+    [[ $(rsync -aun --checksum --info=name "$backupDot" "$localDot") != "dotdiff" ]] && return
+
+    echo -en "\e[1;32mdotDiff changed in backup, Update?\e[0m "
+    read -n 1 -r && [[ $REPLY =~ ^[yY]$ ]] || return
+    echo
+
+    env cp "$backupDot" "$localDot"
+    exit 0
+}
+
+### Start
+if [[ "$1" == "--code" ]]; then
+    diff_vscode=true
+    shift
+fi
+
+arg=$1
+case "$arg-" in
+    -b-)
+        doBackup
+        ;;
+    -f-)
+        checkDotDiffFresh
+        doFreshen
+        ;;
+    -g-)
+        checkDotDiffFresh
+        update_or_get="--ignore-existing"
+        doFreshen
+        ;;
+    -m-)
+        checkDotDiffFresh
+        doMerge
+        ;;
+    "-")
+        doFullDiff
+        ;;
+    *)
+        printf "usage: dotdiff [-f | -b | -m]\n"
+        printf "\tdefault: Diff ~/.* and ~/local/bin to Megasync backup\n"
+        printf "\t-f: freshen the existing local files from newer backup files\n"
+        printf "\t=g: get files that do not exist locally from backyup files\n"
+        printf "\t-b: backup newer source files to megasync\n"
+        printf "\t-m: merge by doing both backup and freshen\n"
+        printf "\t--code: also send diffs to vs code\n"
+        ;;
+esac

@@ -1,0 +1,21 @@
+function emacs()
+{
+    winpty --mouse /d/Storage/emacs/bin/emacs -nw "$@"
+}
+
+#function _funcfind()
+#{
+#	 mdfind -onlyin . -name "$@" | sed -e "s:$(realpath ".")/:./:"
+#}
+#
+#function _funcgrep()
+#{
+#	 mdfind -onlyin . "$@" | sed -e "s:$(realpath ".")/:./:"
+#}
+
+unset HOMEPATH
+unset HOMEDRIVE
+export HISTFILE=${HOME}/.bash_history
+
+append_path PATH /c/tools/ruby24/bin
+

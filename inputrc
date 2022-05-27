@@ -1,0 +1,21 @@
+set completion-ignore-case on
+set revert-all-at-newline
+set input-meta on
+set output-meta on
+set convert-meta off
+set mark-symlinked-directories on
+set page-completions on
+set colored-completion-prefix on
+set show-all-if-ambiguous on
+set menu-complete-display-prefix on
+set bell-style none
+
+# shift-tab
+"\e[Z": menu-complete-backward
+TAB: menu-complete
+
+"\e\e": kill-whole-line
+
+# mintty sends these for alt left/right
+"\e[1;3D": backward-word
+"\e[1;3C": forward-word

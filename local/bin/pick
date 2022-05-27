@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+    files=`find . -maxdepth 1 -type f`
+else
+    files=$(printf '%s\n' "$@")
+fi
+
+lines=( )
+while read txt ; do
+    lines[${#lines[@]}]=$txt
+done <<EOF
+    $(printf "%s" "$files")
+EOF
+
+items=`printf "%s" "$files" | awk '{ printf "\"%d\" \"" $0 "\" on\n", NR }'`
+
+items=($(eval dialog --stdout --keep-tite --checklist \"Select Files\" 0 0 0 $items))
+
+for i in "${items[@]}"; do echo "${lines[$i-1]}"; done

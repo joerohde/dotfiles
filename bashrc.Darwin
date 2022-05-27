@@ -1,0 +1,58 @@
+#[[ "$(uname -a)" == *ARM64* ]] &&
+#    [[ "$(uname -p)" == "i386" ]]
+#    exec env arch -arm64 bash
+
+if [[ ! -f ~/.gitlocal ]]; then
+cat << EOF > ~/.gitlocal
+[credential]
+    helper = osxkeychain
+EOF
+fi
+
+alias merge="open '/Applications/Araxis Merge.app'"
+alias lock="pmset displaysleepnow"
+alias stripansi="gsed -r -e 's/\x1B\[([0-9]{1,3};)*([0-9]{1,3}?)[ABCDEFGHJKSTmsu]//g'"
+alias xargs="gxargs "
+
+function _funcfind()
+{
+	 mdfind -onlyin . -name "$@" | sed -e "s:$(grealpath ".")/:./:"
+}
+
+function _funcgrep()
+{
+	 mdfind -onlyin . "kMDItemKind != Folder && kMDItemTextContent == '$@*'c" | sed -e "s:$(grealpath ".")/:./:"
+}
+
+function pman { man -t "$@" | open -f -a preview; }
+
+function fmount()
+{
+     local ro="-r"
+
+     if [ "$1" == "-w" ]; then
+          ro=""
+          shift
+     fi
+
+     mkdir "$HOME/mount/$1" 2>/dev/null
+     mount $ro -t smbfs "//joer@fileserver/$1" "$HOME/mount/$1"
+     if [ "$?" == "0" ]; then
+          local mode="read-only"
+          test -z "$ro" && mode="writeable"
+          echo "Mounted $mode at ~/mount/$1"
+     fi
+}
+
+function fumount()
+{
+    umount -t smbfs "$HOME/mount/$1"
+    if [ "$?" == "0" ]; then
+        echo "Unmounted ~/mount/$1"
+    fi
+}
+
+function fdir()
+{
+    mount | grep "$HOME/mount"
+}

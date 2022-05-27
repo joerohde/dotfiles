@@ -1,0 +1,4 @@
+#!/bin/bash
+rev="${@: -1}"
+
+git diff ${@:1:$#-1} $rev^ $rev

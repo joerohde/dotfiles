@@ -1,0 +1,42 @@
+- defaults:
+    link:
+      relink: true
+      glob: true
+
+- shell:
+  - sudo chsh -s $(which bash) $(whoami)
+
+- link:
+    # files
+    ~/.bash_login:
+      force: true
+    ~/.bashrc:
+      force: true
+    ~/.bashrc.*:
+      force: true
+    ~/.aliases:
+      force: true
+    ~/.functions:
+      force: true
+    ~/.dialogrc:
+    ~/.dircolors:
+    ~/.dotbot:
+    ~/.emacs:
+    ~/.gitconfig:
+    ~/.inputrc:
+    ~/.install:
+    ~/.install.conf.yaml:
+    ~/.iterm2_shell_integration.bash:
+    ~/.lessfilter:
+    ~/.LESS_TERMCAP:
+
+    # directories
+    ~/.emacs.d:
+    ~/.local/bin:
+      create: true
+      prefix: ''
+      path: local/bin/*
+    ~/.local/etc:
+      create: true
+      prefix: ''
+      path: local/etc/*

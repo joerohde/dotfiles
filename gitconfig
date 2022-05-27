@@ -1,0 +1,42 @@
+[include]
+	path = ~/.gitconfig.Linux
+
+[user]
+	name = Joe Rohde
+	email = Joe.Rohde@Gmail.com
+
+[user "jenkins.jenkins"]
+    apitoken = 6df467ce5bf53b546aa15cbee051a6bd
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[gui]
+	fontui = -family \"Helvetica Neue\" -size 13 -weight normal -slant roman -underline 0 -overstrike 0
+	fontdiff = -family Consolas -size 13 -weight normal -slant roman -underline 0 -overstrike 0
+	recentrepo = /Users/jrohde/src/Hadron
+[difftool]
+	prompt = false
+
+[core]
+	excludesfile = ~/.gitignore
+
+[alias]
+	dt = difftool --tool=araxis --dir-diff
+	dts = difftool --tool=araxis --dir-diff --staged
+	mt = mergetool --tool=araxis --dir-diff
+	mts = mergetool --tool=araxis --dir-diff --staged
+	base = merge-base --fork-point HEAD
+	ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
+	ld = log --pretty=format:"%C(yellow)%h\\ %C(green)%ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short --graph
+	ls = log --pretty=format:"%C(green)%h\\ %C(yellow)[%ad]%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=relative
+	grep = grep -Ii
+
+[pull]
+	rebase = true
+[url "git@github.com:"]
+    insteadOf = "https://github.com/"
+[rebase]
+	autoStash = true

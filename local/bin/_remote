@@ -1,0 +1,20 @@
+#!/bin/bash
+
+count=$(pgrep -fi "caffeinate" | wc -l)
+if [[ $count -eq 0 ]]; then
+    caffeinate -s &
+fi
+
+# bail if already running
+count=$(pgrep -fi "autossh.*localhost" | wc -l)
+[[ $count -ge 1 ]] && exit 0
+
+pkill -9 autossh
+
+#export AUTOSSH_DEBUG=1
+#export AUTOSSH_LOGFILE="$HOME/tmp/autossh.log</string"
+
+/usr/local/bin/autossh -M 0 -q -f -nNT -R \*:2222:localhost:22 -R \*:6900:localhost:5900 home
+# /usr/local/bin/autossh -M 0 -q -f -nNT -R \*:2222:localhost:22 -R \*:6900:localhost:5900 vhome
+
+/usr/local/bin/autossh -M 0 -q -f -N -g -D 2112 localhost

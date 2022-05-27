@@ -1,0 +1,5 @@
+#!/bin/bash
+rev="${@: -1}"
+
+echo git difftool ${@:1:$#-1} $rev^ $rev
+git difftool ${@:1:$#-1} $rev^ $rev

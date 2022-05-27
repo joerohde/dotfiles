@@ -1,0 +1,23 @@
+#!/bin/bash
+
+uname=$(uname);
+case "$uname" in
+    (*Darwin*)
+        type -t port >/dev/null && (sudo port -u selfupdate; sudo port -u upgrade outdated)
+        brew update; brew upgrade; brew upgrade --cask; brew cleanup
+        ;;
+    (*Linux*)
+        sudo apt-get -y update;       sleep 1
+        sudo apt-get -y dist-upgrade; sleep 1
+        sudo apt-get -y upgrade;      sleep 1
+        sudo apt-get -y autoremove;   sleep 1
+        echo
+        checkupdate
+        ;;
+    (*CYGWIN*)
+    (*MINGW*)
+    (*)
+        echo 'error: unsupported platform.'
+        exit 2
+        ;;
+esac;

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# a '+' in the state for the && pid means its a foreground app, so we don't want to wait
+[[ $(ps -o stat= -p $$) == *+* ]] && wait="-nowait" || wait="-wait"
+
+compare $wait "$@"
+

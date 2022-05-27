@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for d in */; do
+    (cd $d; echo -n "Updating: "; pwd; git pull )
+done

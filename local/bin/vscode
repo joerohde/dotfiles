@@ -1,0 +1,164 @@
+#!/bin/bash
+# set -x
+
+SCRIPT=$(basename "$0")
+# options
+parents_only=
+all_users=
+verbose=
+grep_expr='/.+?vscode-server.*?[[:xdigit:]]{32,64}/bin/'
+
+# working state
+code_path=
+remotes=()
+
+function usage
+{
+ cat <<USAGE
+ Find remote or local vscode and use it.
+ Passing a single file as an arg will '--reuse-window'
+
+ Usage: $SCRIPT [ option ] [args...]
+
+  Find 1st parent ancestor PID running the vsode remote server.
+  Otherwise pick a code server owned by this user
+  Otherwise fall back to 'env code' and hope we are running local.
+
+ Args: Passed through to vs code. ($SCRIPT -- --help)
+
+ Options: Exactly one of:
+   -L         (el) Just run local as 'env code'
+   -P         Only search parent chain of processes for server
+   -A         Search all processes, not just current user
+   -H <hash>  (eye) Best guess - use the path vscode from <hash>
+   -D <dir> just use '<dir>/bin/code' as the full path **(see below)
+   -h/--help  This usage message
+   --         All remainng args are passed through to vscode.
+              [i.e. To see vscode help: $SCRIPT -- -h ]
+
+ ** If multiple code servers are found when checking user space (ore all), the
+ paths are shown and the script ends.  This is when -i and -d may help.
+USAGE
+}
+
+function _filter()
+{
+    filter=$(grep -E -o --color=never "$grep_expr" | sort -u)
+    [[ -z "$filter" ]] && return
+    echo "$filter"
+}
+
+function _info()
+{
+    [[ "$verbose" == "true" ]] && printf "%s\n" "$1"
+}
+
+function _find_remotes()
+{
+    # regex to scrape out remote vscode path in the parent process
+    # tree.  If it's a dir, and 'bin/code' under it is -x use that to
+    # launch vscode and have it load in the active 'remote vscode'
+    # if multiple different code servers are running, the -d test
+    # should blow up.
+
+    # ps -U "$EUID" -o comm | egrep -o '/\S*/[a-fA-F0-9]{10,}' | uniq
+    # pstree -p $$ | egrep -o '/\S*/[[:xdigit:]]{32,}' | uniq
+    # (ps -o pid -o command -p 13905 | egrep -o --color=never '[[:digit:]]+\s+/\S+/[[:xdigit:]]{10,}' | uniq
+    # remotes+=("$(pstree -p  $$ | egrep -o '/\S*vscode-server\S*/[[:xdigit:]]{32,64}' | uniq)")
+    local remote=
+
+    # check parent chain of pids
+    local ppid=$PPID
+    while [[ "$ppid" -gt 1 ]]; do
+        remote=$(ps -o ppid= -o command= -p $ppid)
+        ppid=${remote%% *}
+        # strip off the pid and the command args
+        remote=$(_filter <<< "$remote" | head -1)
+         if [[ -n "$remote" ]]; then
+            remotes+=("$remote")
+            return
+        fi
+    done
+    [[ "$parents_only" == "true" ]] && return 2
+    [[ "$all_users" == "true" ]] || uid="-U $EUID"
+
+    # nothing in the parent chain found. Check the user space
+    result=$(ps $uid -o command= | _filter)
+    IFS=$'\n' read -ra remotes -d '' <<< "$result"
+}
+
+function _code() {
+    # wsl case - main code takes care of is
+    if [[ "$(uname -r)" =~ [Mm]icrosoft ]] || [[ -z "${SSH_CLIENT}" ]]; then
+        code_path=(env code)
+        if [[ $(uname -r) =~ WSL ]]; then
+            check_path="$(type -P code)"
+	    if [[ -f "${checkpath}" ]]; then
+	        check_dir="$(dirname "$(dirname "$check_path")")"
+      	        [[ ! -x "$check_path" ]] &&
+		    find "$check_dir" \( -type f -a -iname code -o -iname code.exe \) -print0 | xargs -0 sudo chmod +x
+	    fi
+        fi
+    fi
+
+    if [[ -z "$code_path" ]]; then
+        _find_remotes
+
+        if [[ ${#remotes[@]} -gt 1 ]]; then
+            echo "Found multiple remotes. Consider using -d <dir>."
+            paste -d ' ' <(seq -f "%2g." ${#remotes[@]}) <(printf '%s\n' "${remotes[@]}")
+            return 2
+        fi
+
+        remote=${remotes[0]}
+        if [[ -n "$remote" && -d "$remote" && -f "$remote/remote-cli/code" ]]; then
+	    chmod +x "$remote/remote-cli/code" &> /dev/null
+            code_path=("$remote/remote-cli/code")
+	fi
+    fi
+
+    [[ -z "$code_path" ]] && code_path=(env code)
+
+    # trivial case, only 1 param and it's a readable file, reuse window
+    if [[ "$#" == "1" && -f "$1" && -r "$1" ]]; then
+        code_path+=("--reuse-window")
+    fi
+    _info "${code_path[*]} $*"
+    "${code_path[@]}" "$*"
+}
+
+[[ "$1" == "--debug" ]] && verbose="true" && shift
+
+case "$1" in
+    -\? | -h | --help )
+        usage
+        env code --help
+        exit 1
+        ;;
+    -L )
+        code_path=(env code)
+        shift ;;
+    -P )
+        parents_only="true"
+        shift ;;
+    -A )
+        all_users="true"
+        shift ;;
+    -H )
+        hexhash="$1"; shift
+        code_path=("$HOME/.vscode-server/bin/${hexhash}/bin/code")
+        shift ;;
+    -D )
+        code_path=("$1"); shift
+        shift ;;
+esac
+
+# requires something like this in .bash_login or .bashrc or wherever:
+#  [[ -e "$VSCODE_IPC_HOOK_CLI" ]] &&
+#      echo "$VSCODE_IPC_HOOK_CLI" > "$HOME/.vscode-server/.lkg-ipc-name"
+lkg="$HOME/.vscode-server/.lkg-ipc-name"
+if [[ -f "$lkg" ]]; then
+    ipcpath=$(<"$lkg")
+    [[ -e "$ipcpath" ]] && export VSCODE_IPC_HOOK_CLI="$ipcpath"
+fi
+_code "$@"

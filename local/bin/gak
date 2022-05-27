@@ -1,0 +1,3 @@
+#!/bin/bash
+# Fetch aws keys
+perform get-okta-aws-keys default

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function byebye()
+{
+  echo Error
+  exit 1
+}
+
+cd ~/Library/Logs || byebye
+find . -size +100k -print0 | xargs -0 rm -v
+
+cd /Library/Logs || byebye
+find . -size +100k -print0 | xargs -0 rm -v
+
+cd /var/log || byebye
+find . -size +100k -print0 | xargs -0 rm -v
+

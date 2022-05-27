@@ -1,0 +1,38 @@
+#!/bin/bash
+
+awk 'BEGIN{
+    s="/\\/\\/\\/\\/\\"; s=s s s s s s s s;
+    for (colnum = 0; colnum<77; colnum++) {
+        r = 255-(colnum*255/76);
+        g = (colnum*510/76);
+        b = (colnum*255/76);
+        if (g>255) g = 510-g;
+        printf "\033[48;2;%d;%d;%dm", r,g,b;
+        printf "\033[38;2;%d;%d;%dm", 255-r,255-g,255-b;
+        printf "%s\033[0m", substr(s,colnum+1,1);
+    }
+    printf "\n";
+}'
+
+for x in 0 1 4 5 7 8; do for i in {30..37}; do for a in {40..47}; do printf "\e[$x;$i;$a""m\\\e[$x;$i;$a""m\e[0;37;40m "; done; echo; done; done; echo "";
+
+printf "Color escapes are %s\n" '\e[${value};...;${value}m'
+printf "Values 30..37 are \e[33mforeground colors\e[m\n"
+printf "Values 40..47 are \e[43mbackground colors\e[m\n"
+printf "Value  1 gives a  \e[1mbold-faced look\e[m\n\n"
+
+# foreground colors
+for fgc in {30..37}; do
+    # background colors
+    for bgc in {40..47}; do
+      fgc=${fgc#37} # white
+      bgc=${bgc#40} # black
+      vals="${fgc:+$fgc;}${bgc}"
+      vals=${vals%%;}
+      seq0="${vals:+\e[${vals}m}"
+      printf "  %-9s" "${seq0:-(default)}"
+      printf " ${seq0}TXT\e[m"
+      printf " \e[${vals:+${vals+$vals;}}1mBLD\e[m"
+    done
+echo
+done

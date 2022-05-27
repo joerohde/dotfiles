@@ -1,0 +1,19 @@
+#!/bin/bash
+echo Fetching prune list
+git fetch -p &> /dev/null
+echo Listing branches to delete...
+git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -n 1 echo "  Orphan: "
+
+if [[ $# -ne 1 ]]; then
+    echo "Use -d or -D to delete"
+    exit 0
+fi
+
+if [[ $1 == "-d" || $1 == "-D" ]]; then
+    delete=$1
+fi
+
+if [[ -n $delete ]]; then
+    echo Deleting with: $delete
+    git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -n 1 git branch $delete
+fi
