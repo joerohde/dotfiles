@@ -16,5 +16,6 @@ git submodule update --init --recursive "${DOTBOT_DIR}"
 
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG}" "${@}"
 
-apt-get install -y python3-pip
-pip3 install pygments
+sudo apt-get -y update
+sudo apt-get install -y python3-pip
+sudo pip3 install pygments

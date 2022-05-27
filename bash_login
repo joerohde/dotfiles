@@ -24,8 +24,7 @@ export DONT_BREAK_ON_ASSERT=1
 
 export EDITOR="emacs -nw"
 export LESS="-X -i -M -s -S -x4 -R"
-export LESSOPEN='| lesspipe.sh %s'
-export LESSCOLORIZER="pygmentize"
+export LESSOPEN='|pygmentize -g -P style=dracula -f terminal16m %s'
 export GREP_COLORS="ms=38;5;226:fn=38;5;159"
 
 export VAULT_ADDR='https://vault.api.hbo.com'

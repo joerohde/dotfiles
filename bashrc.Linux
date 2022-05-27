@@ -5,8 +5,6 @@ function checkupdate()
 }
 export -f checkupdate
 
-eval "$(lessfile)"
-
 function _funcfind()
 {
 	. find-dbus tracker-store &> /dev/null

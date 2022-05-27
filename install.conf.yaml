@@ -8,12 +8,13 @@
 
 - link:
     # files
-    ~/.bash_login:
-      force: true
     ~/:
       force: true
-      prefix: ''
+      prefix: '.'
       path: bashrc*
+
+    ~/.bash_login:
+      force: true
     ~/.aliases:
       force: true
     ~/.functions:
@@ -29,6 +30,12 @@
     ~/.iterm2_shell_integration.bash:
     ~/.lessfilter:
     ~/.LESS_TERMCAP:
+
+    # conditionals
+    ~/.vscode-remote/data/Machine/settings.json:
+      if: '[ -n "$CODESPACES" ]'
+      path: codespaces/vscode.settings.json
+      create: true
 
     # directories
     ~/.emacs.d:
