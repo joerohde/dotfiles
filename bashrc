@@ -89,12 +89,9 @@ alias stripansi="sed -r -e 's/\x1B\[([0-9]{1,3};)*([0-9]{1,3}?)[ABCDEFGHJKSTmsu]
 alias synergy="pkill -9 -f synergy; sleep 2; open /Applications/Synergy.app"
 alias tmux="tmux -u -2"
 alias v="source ~/.local/bin/v"
+alias which="command -V"
 alias x="stripansi | xargs -d '\n' "
 alias xargs="xargs "
-
-# HBO Stuff
-alias bball="grunt buddybuild:all"
-alias bbplat="grunt buddybuild:platform"
 
 function cred() {
     if [ "$1" == "" ]; then
@@ -296,14 +293,6 @@ function lazy_nvm_use_check() {
 [[ -r ${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh ]] && . ${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh
 [[ -r ${HOMEBREW_PREFIX}/etc/profile.d/cdargs-bash.sh ]] && . ${HOMEBREW_PREFIX}/etc/profile.d/cdargs-bash.sh
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-function which() {
-    (
-        alias
-        declare -f
-    ) | env which --tty-only --read-alias --read-functions --show-tilde --show-dot "$@"
-}
-#export -f which
 
 if [ -n "$PS1" ]; then
     shopt -s autocd cdspell cmdhist direxpand dirspell globstar histappend histreedit nocaseglob no_empty_cmd_completion

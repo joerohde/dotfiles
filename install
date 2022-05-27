@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+
+
 set -e
 
 CONFIG="install.conf.yaml"
@@ -13,3 +15,6 @@ git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
 git submodule update --init --recursive "${DOTBOT_DIR}"
 
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG}" "${@}"
+
+apt-get install -y python3-pip
+pip3 install pygments

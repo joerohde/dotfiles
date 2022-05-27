@@ -10,10 +10,10 @@
     # files
     ~/.bash_login:
       force: true
-    ~/.bashrc:
+    ~/:
       force: true
-    ~/.bashrc.*:
-      force: true
+      prefix: ''
+      path: bashrc*
     ~/.aliases:
       force: true
     ~/.functions:
