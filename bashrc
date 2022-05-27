@@ -22,6 +22,8 @@ git config --global include.path "~/.gitconfig.${MYUNAME}"
 # any conditional context/options to know it's vscode - which will need nvm access
 [[ $- == *i* ]] || [[ $TERM_PROGRAM == "vscode" ]] || { . "$NVM_DIR/nvm.sh"; return; }
 
+[[ -n "${GREP_COLORS}" ]] || exec env bash -l
+
 [ -s "$NVM_DIR/nvm.sh" ] && \. ~/.local/bin/lazynvm # This lazy loads nvm, not optional if nvm is installed
 
 
