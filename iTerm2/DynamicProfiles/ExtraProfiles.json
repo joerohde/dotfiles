@@ -1,0 +1,71 @@
+{
+  "Profiles": [
+    {
+	"Name": "Home Mac Mini",
+	"Guid": "joes-mac-mini.home.joe.com",
+	"Dynamic Profile Parent Name": "Default",
+	"Bound Hosts" : [
+	    "joe-mac-mini*"
+	],
+	"Background Color" : {
+	    "Red Component" : 0.1925126612186432,
+	    "Color Space" : "Calibrated",
+	    "Blue Component" : 0.1049937531352043,
+	    "Alpha Component" : 1,
+	    "Green Component" : 0.1023935526609421
+	},
+    },
+    {
+	"Name": "Home Mach-E",
+	"Guid": "joes-mach-e.home.joe.com",
+	"Dynamic Profile Parent Name": "Default",
+	"Bound Hosts" : [
+	    "joes-mach-e*"
+	],
+	"Background Color" : {
+	    "Red Component" : 0.1125126612186432,
+	    "Color Space" : "Calibrated",
+	    "Blue Component" : 0.1425126612186432,
+	    "Alpha Component" : 1,
+	    "Green Component" : 0.0823935526609421
+	},
+	"Badge Color" : {
+	    "Red Component" : 0.9525126612186432,
+	    "Color Space" : "Calibrated",
+	    "Blue Component" : 0.2425126612186432,
+	    "Alpha Component" : 0.45,
+	    "Green Component" : 0.9523935526609421
+	},
+    },
+    {
+	"Name": "Home MacBook",
+	"Guid": "macbook.home.joe.com",
+	"Dynamic Profile Parent Name": "Default",
+	"Bound Hosts" : [
+	    "joes-mbp*"
+	],
+	"Background Color" : {
+	    "Red Component" : 0.158063992857933,
+	    "Color Space" : "Calibrated",
+	    "Blue Component" : 0.1941756755113602,
+	    "Alpha Component" : 1,
+	    "Green Component" : 0.1032806634902954
+	},
+    },
+    {
+	"Name": "Home Virtual Ubuntu",
+	"Guid": "virt-joe-ubuntu.home.joe.com",
+	"Dynamic Profile Parent Name": "Default",
+	"Bound Hosts" : [
+	    "joe-ubuntu*"
+	],
+	"Background Color" : {
+	    "Red Component" : 0.10063992857933,
+	    "Color Space" : "Calibrated",
+	    "Blue Component" : 0.1241756755113602,
+	    "Alpha Component" : 1,
+	    "Green Component" : 0.1232806634902954
+	},
+    },
+  ]
+}

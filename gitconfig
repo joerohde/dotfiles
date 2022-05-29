@@ -1,5 +1,5 @@
 [include]
-	path = ~/.gitconfig.Linux
+	path = ~/.gitconfig.local
 
 [user]
 	name = Joe Rohde
@@ -21,7 +21,8 @@
 	prompt = false
 
 [core]
-	excludesfile = ~/.gitignore
+	excludesfile = ~/.gitignore_global
+	autocrlf = input
 
 [alias]
 	dt = difftool --tool=araxis --dir-diff
@@ -36,7 +37,6 @@
 
 [pull]
 	rebase = true
-[url "git@github.com:"]
-    insteadOf = "https://github.com/"
+
 [rebase]
 	autoStash = true

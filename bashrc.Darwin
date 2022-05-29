@@ -9,6 +9,8 @@ cat << EOF > ~/.gitlocal
 EOF
 fi
 
+prepend_path PATH "/usr/local/opt/python@3.8/bin"
+
 alias merge="open '/Applications/Araxis Merge.app'"
 alias lock="pmset displaysleepnow"
 alias stripansi="gsed -r -e 's/\x1B\[([0-9]{1,3};)*([0-9]{1,3}?)[ABCDEFGHJKSTmsu]//g'"

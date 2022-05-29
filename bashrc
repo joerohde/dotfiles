@@ -15,8 +15,6 @@ MYHOST=${MYHOST%%.*}
 MYUNAME=${MYUNAME:-$(uname)}
 MYUNAME=${MYUNAME%%_*}
 
-git config --global include.path "~/.gitconfig.${MYUNAME}"
-
 # If not running interactively, don't do anything elsem except hard init
 # nvm.  Kind of sucks, but when vscode remote-ssh jumps in, it doesn't give
 # any conditional context/options to know it's vscode - which will need nvm access
@@ -52,114 +50,9 @@ prepend_path PATH ~/.local/bin
 
 [[ -n $SSH_CLIENT || -n $SSH_CONNECTION || -n $SSH_TTY ]] && isSSH=true
 
-alias 24bit="export TERM=xterm-24bits"
-alias 256="export TERM=xterm-256color"
-alias cgrep="grep --color=always"
-alias clean="(shopt -s nullglob; rm -I -v -- *~ .*~ \#*\#)"
-alias cls="echo -ne '\ec'"
-alias copy="cp"
-alias ctags="/Developer/Applications/BBEdit.app/Contents/MacOS/ctags"
-alias d2j="d2j-dex2jar"
-alias d=_lessdir
-alias dd="dir | grep '^d'"
-alias dir="ls -lh"
-alias dirs="dirs -p"
-alias emacs="emacs -nw"
-alias gitsub="git submodule update --recursive --init"
-# shellcheck disable=SC2139 # otherwise it is recursive, wanting to pick up lscolor changes
-alias grep="${BASH_ALIASES[grep]:-grep} -E"
-alias h="history"
-alias hgrep="history | grep"
-alias home="cd ~"
-alias lib="cd ~/Library"
-alias master="git checkout --quiet HEAD :/package-lock.json; git fetch origin master:master"
-alias mastermerge="git fetch -v origin master:master && { git merge --stat master; }"
-alias mfind=_funcfind
-alias mgrep=_funcgrep
-alias more="less"
-alias move="mv"
-alias nvmi='arch -x86_64 /bin/sh -c "source $HOME/.nvm/nvm.sh;nvm install"'
-alias pull="git cd master; git pull; git cd .."
-alias rd="rmdir"
-alias rm="rm -i"
-alias splitspace="perl -pne 's/ +/\n/g'"
-alias splitty="tee /dev/tty"
-alias src="cd ~/src"
-alias stripansi="sed -r -e 's/\x1B\[([0-9]{1,3};)*([0-9]{1,3}?)[ABCDEFGHJKSTmsu]//g'"
-alias synergy="pkill -9 -f synergy; sleep 2; open /Applications/Synergy.app"
-alias tmux="tmux -u -2"
-alias v="source ~/.local/bin/v"
-alias which="command -V"
-alias x="stripansi | xargs -d '\n' "
-alias xargs="xargs "
+[[ -r ~/.aliases ]] && . ~/.aliases
 
-function cred() {
-    if [ "$1" == "" ]; then
-        echo "usage: cred <MFA>"
-        return
-    fi
-    perform get-aws-keys jrohde "$1" hbogo
-}
-
-function linetime() {
-    "$@" | while IFS= read -r line; do printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$line"; done
-}
-
-function psport() {
-    lsof -n -i TCP:"$*"
-}
-
-function hdir() {
-    gls -lht "$@" | head -12
-}
-
-function path() { echo $PATH | perl -pe 's/:/\n/g'; }
-
-function dbg() {
-    if [ "$1" == "" ]; then
-        echo "usage: dbg <partial process name>"
-        return
-    fi
-    gdb -p "$(pgrep -i -n "$1")"
-}
-
-function _fromalias() {
-    alias "$1" | awk -F "'" '{ print $2; }'
-}
-
-function _lessdir() {
-    local cmd=$(_fromalias dir)
-
-    if [ "$#" == "1" -a -f "$1" -a -r "$1" ]; then
-        cmd=$(_fromalias more)
-    fi
-
-    eval "$cmd" "$@"
-}
-
-function code() {
-    [[ $(declare -F lazynvm) =~ "lazynvm" ]] && lazynvm
-    "$HOME/.local/bin/vscode" --debug "$@"
-}
-
-function findnew() {
-    lines=30
-    if [ -n "$1" ]; then
-        lines="$1"
-        shift
-    fi
-
-    find . -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r | head -n $lines | sed -e 's/\.0*//'
-}
-
-function manswitch() {
-    man $1 | less -p "^ +$2"
-}
-
-function manpdf() {
-    # man -t "$@" | ps2pdf - | open -f -a /Applications/Preview.app
-    man -t "$@" | open -f -a /Applications/Preview.app
-}
+[[ -r ~/.functions ]] && . ~/.functions
 
 if [ ${SHLVL} -le 1 ]; then
     IGNOREEOF=16
@@ -184,9 +77,15 @@ OFF="\[\e[0m\]"
 function _buildprompt() {
     EXITSTATUS="${__bp_last_ret_value:-$?}"
     local extdebug="$(shopt -p extdebug)"
+    local trapdebug="$(trap -p DEBUG)"
+    trap DEBUG
     shopt -u extdebug
-    # only check iterm after 1st prompt so raw tty toggle doesn't eat
-    # launch commands from stdin (yuck).  TABCOLOR isn't set yet on 1st call
+    # NOTE: HACK: YUCK: Detecting iterm2 required tossing the terminal into raw
+    # mode to not leave garbage on the screen for non-iterm2 terminals.  vscode
+    # remote (especially when installing) seems to be 'feeding' the command into
+    # the terminal as if it was a keyboard.  The stty to raw interacts poorly.
+    # As such we do some deferred iterm2 detection outside startup, the 2nd time
+    # we build the prompt.  Yeah... gross.
     if [[ -n "$TABCOLOR" ]] && [[ -z $isiTerm2  ]]; then
     	# echo "checking isIterm2..."
         if hash isiterm2.sh >& /dev/null && isiterm2.sh &&[[ -r ~/.iterm2_shell_integration.bash ]]; then
@@ -195,8 +94,6 @@ function _buildprompt() {
         else
             isiTerm2=false
         fi
-        test -r "$HOME/.local/bin/cd.sh" && . "$HOME/.local/bin/cd.sh"
-        extdebug="$(shopt -p extdebug)"
     fi
 
     STAT=""
@@ -239,6 +136,8 @@ function _buildprompt() {
     lazy_nvm_use_check
 
     eval "$extdebug"
+    eval "$trapdebug"
+
     (exit "$EXITSTATUS")
 }
 
@@ -306,15 +205,11 @@ if [ -n "$PS1" ]; then
         PROMPT_COMMAND=_buildprompt
     fi
 
-    #	 [ -z "$TMUX" ] && tmux -u -2
+    # [ -z "$TMUX" ] && tmux -u -2
 fi
 
-_git_cd() {
-    _git_checkout
-    compopt +o default
-}
-
-[[ -r "$HOME/.bashrc.$MYUNAME" ]] && . "$HOME/.bashrc.$MYUNAME"
+[[ -r "$HOME/.bashrc.local" ]] && . "$HOME/.bashrc.local"
+[[ -r "$HOME/.local/bin/cd.sh" ]] && . "$HOME/.local/bin/cd.sh"
 
 echo -n
 

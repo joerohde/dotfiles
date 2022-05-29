@@ -2,39 +2,45 @@
     link:
       relink: true
       glob: true
+      force: true
 
 - shell:
-  - sudo chsh -s $(which bash) $(whoami)
+  - echo Updating dot files...
 
 - link:
-    # files
-    ~/:
-      force: true
-      prefix: '.'
-      path: bashrc*
-
+    # regular files
+    ~/.bashrc:
     ~/.bash_login:
-      force: true
     ~/.aliases:
-      force: true
     ~/.functions:
-      force: true
     ~/.dialogrc:
     ~/.dircolors:
     ~/.dotbot:
     ~/.emacs:
     ~/.gitconfig:
+    ~/.gitignore_global:
     ~/.inputrc:
-    ~/.install:
-    ~/.install.conf.yaml:
     ~/.iterm2_shell_integration.bash:
-    ~/.lessfilter:
     ~/.LESS_TERMCAP:
+    ~/.tmux.conf:
+
+    # uname abstracted files
+    ~/.bashrc.local:
+      path: bashrc.${UNAME}
+
+    ~/.gitconfig.local:
+      path: gitconfig.${UNAME}
 
     # conditionals
     ~/.vscode-remote/data/Machine/settings.json:
       if: '[ -n "$CODESPACES" ]'
       path: codespaces/vscode.settings.json
+      create: true
+
+    ~/Library/Application Support/iTerm2/DynamicProfiles/ExtraProfiles.json:
+      if: '[ "$UNAME" == "Darwin" ]'
+      path: iTerm2/DynamicProfiles/ExtraProfiles.json
+      prefix: ''
       create: true
 
     # directories

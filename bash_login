@@ -18,7 +18,7 @@ fi
     infocmp xterm-24bits >&/dev/null && export TERM=xterm-24bits
 
 [[ -e "$VSCODE_IPC_HOOK_CLI" ]] &&
-    echo "$VSCODE_IPC_HOOK_CLI" > "$HOME/.vscode-server/.lkg-ipc-name"
+    echo "$VSCODE_IPC_HOOK_CLI" > "$HOME/.vscode-server.lkg-ipc-name"
 
 export DONT_BREAK_ON_ASSERT=1
 
@@ -40,7 +40,9 @@ export FIGNORE='ackage-lock.json'
 #export CPPFLAGS="-I/opt/local/include"
 #export LDFLAGS="-L/opt/local/lib"
 
-test -r ~/.bash_login.local &&. ~/.bash_login.local
+test -r ~/.LESS_TERMCAP && . ~/.LESS_TERMCAP
+
+test -r ~/.bash_login.local && . ~/.bash_login.local
 
 [[ -d ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin ]] &&
    PATH=$PATH:${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin

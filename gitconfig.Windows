@@ -1,0 +1,9 @@
+[diff]
+tool = araxis
+[difftool "araxis"]
+	path = C:\\Program Files\\Araxis\\Araxis Merge\\compare.exe
+[merge]
+tool = araxis
+[mergetool "araxis"]
+	path = C:\\Program Files\\Araxis\\Araxis Merge\\compare.exe
+

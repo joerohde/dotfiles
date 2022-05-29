@@ -32,6 +32,9 @@ function _funcgrep()
 	unset -v DBUS_SESSION_BUS_ADDRESS
 }
 
-[[ -d /mnt/c/Users/joe/ ]] && pushd /mnt/c/Users/joe/ >/dev/null
-[[ -d /mnt/d/Source/ ]] && pushd /mnt/d/Source/ >/dev/null
+if [[ "$PWD" == "$HOME" ]]; then
+	[[ -d /mnt/c/Users/joe/ ]] && pushd /mnt/c/Users/joe/ >/dev/null
+	[[ -d /mnt/d/Source/ ]] && pushd /mnt/d/Source/ >/dev/null
+fi
+
 append_path PATH ~/.local/bin/

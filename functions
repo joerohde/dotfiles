@@ -1,0 +1,86 @@
+#!/bin/bash
+
+function cred() {
+    if [ "$1" == "" ]; then
+        echo "usage: cred <MFA>"
+        return
+    fi
+    perform get-aws-keys jrohde "$1" hbogo
+}
+
+function linetime() {
+    "$@" | while IFS= read -r line; do printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$line"; done
+}
+
+function psport() {
+    lsof -n -i TCP:"$*"
+}
+
+function hdir() {
+    gls -lht "$@" | head -12
+}
+
+function path() { echo $PATH | perl -pe 's/:/\n/g'; }
+
+function dbg() {
+    if [ "$1" == "" ]; then
+        echo "usage: dbg <partial process name>"
+        return
+    fi
+    gdb -p "$(pgrep -i -n "$1")"
+}
+
+function _fromalias() {
+    alias "$1" | awk -F "'" '{ print $2; }'
+}
+
+function _lessdir() {
+    local cmd
+    cmd=$(_fromalias dir)
+
+    if [ "$#" == "1" -a -f "$1" -a -r "$1" ]; then
+        cmd=$(_fromalias more)
+    fi
+
+    eval "$cmd" "$@"
+}
+
+function code() {
+    [[ $(declare -F lazynvm) =~ "lazynvm" ]] && lazynvm
+    "$HOME/.local/bin/vscode" --debug "$@"
+}
+
+function findnew() {
+    local LINES FIND
+    LINES=30
+    if [ -n "$1" ]; then
+        LINES="$1"
+        shift
+    fi
+    FIND="find"
+    command -v gfind >/dev/null && FIND="gfind"
+
+    ${FIND} . -type f -printf '%TY-%Tm-%Td %TT %p\n' | sort -r | head -n $LINES | sed -e 's/\.0*//'
+}
+
+function ghclone() {
+    local REPO
+    REPO="$1"
+    [[ "$REPO" != */* ]] && REPO="joerohde/$1"
+    git clone "git@github.com:${REPO}.git"
+}
+
+function manswitch() {
+    man $1 | less -p "^ +$2"
+}
+
+function manpdf() {
+    # man -t "$@" | ps2pdf - | open -f -a /Applications/Preview.app
+    man -t "$@" | open -f -a /Applications/Preview.app
+}
+
+function _git_cd() {
+    _git_checkout
+    compopt +o default
+}
+
