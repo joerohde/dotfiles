@@ -20,6 +20,12 @@
 [difftool]
 	prompt = false
 
+[diff]
+	tool = araxis
+
+[merge]
+	tool = araxis
+
 [core]
 	excludesfile = ~/.gitignore_global
 	autocrlf = input
