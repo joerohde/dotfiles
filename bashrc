@@ -74,12 +74,18 @@ MAGENTA="\[\e[95;1m\]"
 CYAN="\[\e[96;1m\]"
 OFF="\[\e[0m\]"
 
+export CD_DBG
+export CD_DBG_CMDS=()
 function _buildprompt() {
     EXITSTATUS="${__bp_last_ret_value:-$?}"
     local extdebug="$(shopt -p extdebug)"
     local trapdebug="$(trap -p DEBUG)"
     trap DEBUG
     shopt -u extdebug
+    echo "Before Reset: $CD_DBG"
+    printf -- '-* %s\n' "${CD_DBG_CMDS[@]}"
+    CD_DBG=0
+    CD_DBG_CMDS=()
     # NOTE: HACK: YUCK: Detecting iterm2 required tossing the terminal into raw
     # mode to not leave garbage on the screen for non-iterm2 terminals.  vscode
     # remote (especially when installing) seems to be 'feeding' the command into
@@ -134,9 +140,10 @@ function _buildprompt() {
     PS2="${BOLD}>${OFF} "
 
     lazy_nvm_use_check
-
     eval "$extdebug"
     eval "$trapdebug"
+    echo "After prompt built: $CD_DBG"
+    printf -- '+* %s\n' "${CD_DBG_CMDS[@]}"
 
     (exit "$EXITSTATUS")
 }
@@ -210,6 +217,8 @@ fi
 
 [[ -r "$HOME/.bashrc.local" ]] && . "$HOME/.bashrc.local"
 [[ -r "$HOME/.local/bin/cd.sh" ]] && . "$HOME/.local/bin/cd.sh"
+
+test -r "$HOME/.local/bin/cd.sh" && . "$HOME/.local/bin/cd.sh"
 
 echo -n
 

@@ -157,6 +157,8 @@ EOF
 function cd_debug_trap()
 {
     local CMD="$BASH_COMMAND"
+    ((CD_DBG++))
+    CD_DBG_CMDS+=("$CMD")
     if [[ "$CMD" == "." ]]; then
 	    builtin pushd >/dev/null
         return 1
@@ -168,6 +170,7 @@ function cd_debug_trap()
             [[ "$?" == "0" ]] || { builtin popd -n >/dev/null; (( i++ )); }
             (( i-- ))
         done
+        CD_DBG_CMDS+=("*** COMMAND HANDLED ***")
         return 1
     fi
     return 0
