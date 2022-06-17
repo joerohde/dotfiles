@@ -38,13 +38,13 @@ function append_path() {
 # MacPorts Installer addition on 2009-12-15_at_20:30:37: adding an appropriate PATH/MANPATH variable for use with MacPorts.
 # take out /opt/local/libexec/gnubin since it screws with HBO build's use of 'cp' Grrr!!! Probably need to use 'gcp' and such in my local scripts
 [[ -d /opt/local/libexec ]] &&
-    export PATH=/opt/local/libexec/gnubin:/opt/local/bin:/opt/local/sbin:$PATH
+    export PATH=$PATH:/opt/local/libexec/gnubin:/opt/local/bin:/opt/local/sbin
 
 [[ -d /usr/local/opt ]] &&
-    export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/sbin:$PATH
+    export PATH=$PATH:/usr/local/opt/coreutils/libexec/gnubin:/usr/local/sbin
 
 [[ -d /usr/local/share/man ]] &&
-    export MANPATH=/opt/local/share/man:$MANPATH
+    export MANPATH=$MANPATH:/opt/local/share/man
 
 prepend_path PATH ~/.local/bin
 
@@ -147,10 +147,13 @@ function lazy_nvm_use_check() {
     # finally - a better performing auto-use-nvm hack...
     # nvm is lazy loaded for startup perf. Don't check if it hasn't loaded yet.
     local LOADED_NVM
+    local STAT="stat"
     LOADED_NVM=$(builtin type -t "nvm_find_nvmrc")
 
+    command -v gstat >/dev/null && STAT="gstat"
+    
     # if there's a known nvm home directory, get it's current mod time to see if it changed
-    [[ -f "$LKG_NVMRC" ]] && CURRENT_CHANGED=$(stat -c "%y" "$LKG_NVMRC")
+    [[ -f "$LKG_NVMRC" ]] && CURRENT_CHANGED=$(${STAT} -c "%y" "$LKG_NVMRC")
 
     # if we changed directory, or the mod time changed, see if we need to do 'nvm use'
     if [[ -n "$LOADED_NVM" && ( "$PWD" != "$LKG_PWD" || "$CURRENT_CHANGED" != "$LKG_CHANGED"  ) ]]; then
@@ -181,7 +184,7 @@ function lazy_nvm_use_check() {
                 fi
             fi
             LKG_NVMRC="$CURRENT_NVMRC"
-            LKG_CHANGED=$(stat -c "%y" "$CURRENT_NVMRC")
+            LKG_CHANGED=$(${STAT} -c "%y" "$CURRENT_NVMRC")
         fi
         LKG_PWD="$PWD"
     fi

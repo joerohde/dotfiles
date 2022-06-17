@@ -9,7 +9,7 @@ function die() {
     exit ${CODE}
 }
 
-TARGET=$(readlink -f "${BASH_SOURCE%}")
+TARGET=$(readlink "${BASH_SOURCE%}")
 DOTFILES_DIR="${TARGET%/*}/../.."
 INSTALL=$(realpath "${DOTFILES_DIR}/install")
 
