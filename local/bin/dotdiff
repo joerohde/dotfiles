@@ -5,21 +5,21 @@ function die() {
     MESSAGE="$1"
     CODE=${2:-2}
 
-    printf "Error: ${MESSAGE}\n"
-    exit ${CODE}
+    printf "Error: %s\n" "${MESSAGE}"
+    exit "${CODE}"
 }
 
-TARGET=$(readlink -f "${BASH_SOURCE%}")
+TARGET=$(readlink "${BASH_SOURCE%}")
 DOTFILES_DIR="${TARGET%/*}/../.."
 INSTALL=$(realpath "${DOTFILES_DIR}/install")
 
 cd ${DOTFILES_DIR} || die "can't chdir: ${DOTFILES_DIR}"
 
 git fetch && { git rebase || git rebase --abort; }
-GITSTAT=$(git status --porcelain) || die "call to git status failed"
 
-[[ -z $GITSTAT ]]  || die "git status not clean\n${GITSTAT}"
-[[ -f $INSTALL ]]  || die "install script not found: ${INSTALL}" 1
-[[ -x $INSTALL ]]  || die "install script not executable ${INSTALL}" 1
+# GITSTAT=$(git status --porcelain) || die "call to git status failed"
+# [[ -z $GITSTAT ]] || die "git status not clean\n${GITSTAT}"
 
+[[ -f $INSTALL ]] || die "install script not found: ${INSTALL}" 1
+[[ -x $INSTALL ]] || die "install script not executable ${INSTALL}" 1
 $INSTALL

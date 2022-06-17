@@ -1,0 +1,53 @@
+{ _brew="/opt/homebrew/bin" && [[ -x ${_brew}/brew ]]; } ||
+    { _brew="/opt/local/bin" && [[ -x ${_brew}/brew ]]; } ||
+    { _brew="/usr/local/bin" && [[ -x ${_brew}/brew ]]; } || unset _brew
+
+# { command -v lesspipe.sh &>/dev/null && _lessopen=lesspipe.sh; } ||
+#     { command -v lesspipe &>/dev/null && _lessopen=lesspipe; } ||
+#     { command -v pygmentize &>/dev/null && _lessopen="pygmentize -g -O style=dracula -f terminal16m"; } ||
+#     _lessopen="bat"
+
+if [[ -n $_brew ]]; then
+    eval "$(${_brew}/brew shellenv)"
+fi
+
+[[ -z $VSCODE_PID ]] &&
+    infocmp xterm-24bits >&/dev/null && export TERM=xterm-24bits
+
+[[ -e "$VSCODE_IPC_HOOK_CLI" ]] &&
+    echo "$VSCODE_IPC_HOOK_CLI" >"$HOME/.vscode-server.lkg-ipc-name"
+
+export DONT_BREAK_ON_ASSERT=1
+
+export EDITOR="emacs -nw"
+export PAGER="bat"
+export MANPAGER="bat -S"
+export LESS="-X -i -M -s -S -x4 -R"
+
+#export LESSCOLORIZER='pygmentize -g -O style=dracula -f terminal16m %s'
+#export LESSOPEN="|- ${_lessopen} %s"
+#unset _lessopen
+
+export GREP_COLORS="ms=38;5;226:fn=38;5;159"
+
+export VAULT_ADDR='https://vault.api.hbo.com'
+test -r ~/.vault-token && export VAULT_TOKEN=$(<~/.vault-token)
+
+test -z "$LC_ALL" && export LC_ALL="en_US.UTF-8"
+
+# So lame. FIGNORE is a 'file extension', but does not require 'dot'
+# so to remove package-lock.json globally and easily, leave off the 'p'
+# So... now we also don't match the classic: hackage-lock.json
+export FIGNORE='ackage-lock.json'
+
+#export CPPFLAGS="-I/opt/local/include"
+#export LDFLAGS="-L/opt/local/lib"
+
+test -r ~/.LESS_TERMCAP && . ~/.LESS_TERMCAP
+
+test -r ~/.bash_login.local && . ~/.bash_login.local
+
+[[ -d ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin ]] &&
+    PATH=$PATH:${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin
+
+test -r ~/.local/etc/profile && . ~/.local/etc/profile

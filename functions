@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ -n "$ZSH_VERSION" ]; then
+function printkv() {
+    printf '%40s => %s\n' "${(P@kv)1}"
+}
+
+fi
+
 function cred() {
     if [ "$1" == "" ]; then
         echo "usage: cred <MFA>"
@@ -14,6 +21,10 @@ function linetime() {
 
 function psport() {
     lsof -n -i TCP:"$*"
+}
+
+function pslisten() {
+    lsof -PiTCP -sTCP:LISTEN
 }
 
 function hdir() {
@@ -38,16 +49,16 @@ function _lessdir() {
     local cmd
     cmd=$(_fromalias dir)
 
-    if [ "$#" == "1" -a -f "$1" -a -r "$1" ]; then
+    if [[ "$#" == "1" ]] && [[ -f "$1" ]] && [[ -r "$1" ]]; then
         cmd=$(_fromalias more)
     fi
-
     eval "$cmd" "$@"
 }
 
 function code() {
     [[ $(declare -F lazynvm) =~ "lazynvm" ]] && lazynvm
-    "$HOME/.local/bin/vscode" --debug "$@"
+    #"$HOME/.local/bin/vscode" --debug "$@"
+    NODE_OPTIONS="" env code "$@"
 }
 
 function findnew() {
@@ -71,7 +82,13 @@ function ghclone() {
 }
 
 function manswitch() {
-    man $1 | less -p "^ +$2"
+    man $1 | ba -p "^ +$2"
+}
+
+function fetch() {
+    BRANCH="${1:-main}"
+    echo -n "Fetching ${BRANCH}..."
+    git fetch origin "${BRANCH}:${BRANCH}"
 }
 
 function manpdf() {
@@ -81,6 +98,22 @@ function manpdf() {
 
 function _git_cd() {
     _git_checkout
-    compopt +o default
+    #compopt +o default
 }
 
+# rebase
+function grb() {
+    git rebase "origin/$1" -i
+}
+
+function glog() {
+    git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+}
+
+function goos() {
+    GOOS='' GOARCH='' GOPRIVATE=github.com/wbd-streaming "$@"
+}
+
+function god() {
+    goos go "$@"
+}

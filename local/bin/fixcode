@@ -1,4 +1,6 @@
 #!/bin/bash
-
 sudo chmod +x /mnt/c/Users/Joe/.vscode/extensions/ms-vscode-remote.remote-wsl-*/scripts/*.sh
-sudo chmod +x /mnt/c/Program\ Files/Microsoft\ VS\ Code/bin/*
+target=$(dirname "$(whereis code | sed -e 's/code: //')")
+sudo chmod +x "$target"/*
+sudo chmod +x "$target"/../*.exe
+# sudo chmod +x /mnt/c/Program\ Files/Microsoft\ VS\ Code/bin/*

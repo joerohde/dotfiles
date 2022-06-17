@@ -1,6 +1,8 @@
 #!/bin/bash
 # set -x
 
+NODE_OPTIONS=""
+
 SCRIPT=$(basename "$0")
 # options
 parents_only=
@@ -12,9 +14,8 @@ grep_expr='/.+?vscode-server.*?[[:xdigit:]]{32,64}/bin/'
 code_path=
 remotes=()
 
-function usage
-{
- cat <<USAGE
+function usage {
+    cat <<USAGE
  Find remote or local vscode and use it.
  Passing a single file as an arg will '--reuse-window'
 
@@ -41,20 +42,17 @@ function usage
 USAGE
 }
 
-function _filter()
-{
+function _filter() {
     filter=$(grep -E -o --color=never "$grep_expr" | sort -u)
     [[ -z "$filter" ]] && return
     echo "$filter"
 }
 
-function _info()
-{
+function _info() {
     [[ "$verbose" == "true" ]] && printf "%s\n" "$1"
 }
 
-function _find_remotes()
-{
+function _find_remotes() {
     # regex to scrape out remote vscode path in the parent process
     # tree.  If it's a dir, and 'bin/code' under it is -x use that to
     # launch vscode and have it load in the active 'remote vscode'
@@ -73,8 +71,8 @@ function _find_remotes()
         remote=$(ps -o ppid= -o command= -p $ppid)
         ppid=${remote%% *}
         # strip off the pid and the command args
-        remote=$(_filter <<< "$remote" | head -1)
-         if [[ -n "$remote" ]]; then
+        remote=$(_filter <<<"$remote" | head -1)
+        if [[ -n "$remote" ]]; then
             remotes+=("$remote")
             return
         fi
@@ -84,7 +82,7 @@ function _find_remotes()
 
     # nothing in the parent chain found. Check the user space
     result=$(ps $uid -o command= | _filter)
-    IFS=$'\n' read -ra remotes -d '' <<< "$result"
+    IFS=$'\n' read -ra remotes -d '' <<<"$result"
 }
 
 function _code() {
@@ -93,11 +91,11 @@ function _code() {
         code_path=(env code)
         if [[ $(uname -r) =~ WSL ]]; then
             check_path="$(type -P code)"
-	    if [[ -f "${checkpath}" ]]; then
-	        check_dir="$(dirname "$(dirname "$check_path")")"
-      	        [[ ! -x "$check_path" ]] &&
-		    find "$check_dir" \( -type f -a -iname code -o -iname code.exe \) -print0 | xargs -0 sudo chmod +x
-	    fi
+            if [[ -f "${checkpath}" ]]; then
+                check_dir="$(dirname "$(dirname "$check_path")")"
+                [[ ! -x "$check_path" ]] &&
+                    find "$check_dir" \( -type f -a -iname code -o -iname code.exe \) -print0 | xargs -0 sudo chmod +x
+            fi
         fi
     fi
 
@@ -112,9 +110,9 @@ function _code() {
 
         remote=${remotes[0]}
         if [[ -n "$remote" && -d "$remote" && -f "$remote/remote-cli/code" ]]; then
-	    chmod +x "$remote/remote-cli/code" &> /dev/null
+            chmod +x "$remote/remote-cli/code" &>/dev/null
             code_path=("$remote/remote-cli/code")
-	fi
+        fi
     fi
 
     [[ -z "$code_path" ]] && code_path=(env code)
@@ -130,27 +128,34 @@ function _code() {
 [[ "$1" == "--debug" ]] && verbose="true" && shift
 
 case "$1" in
-    -\? | -h | --help )
-        usage
-        env code --help
-        exit 1
-        ;;
-    -L )
-        code_path=(env code)
-        shift ;;
-    -P )
-        parents_only="true"
-        shift ;;
-    -A )
-        all_users="true"
-        shift ;;
-    -H )
-        hexhash="$1"; shift
-        code_path=("$HOME/.vscode-server/bin/${hexhash}/bin/code")
-        shift ;;
-    -D )
-        code_path=("$1"); shift
-        shift ;;
+-\? | -h | --help)
+    usage
+    env code --help
+    exit 1
+    ;;
+-L)
+    code_path=(env code)
+    shift
+    ;;
+-P)
+    parents_only="true"
+    shift
+    ;;
+-A)
+    all_users="true"
+    shift
+    ;;
+-H)
+    hexhash="$1"
+    shift
+    code_path=("$HOME/.vscode-server/bin/${hexhash}/bin/code")
+    shift
+    ;;
+-D)
+    code_path=("$1")
+    shift
+    shift
+    ;;
 esac
 
 # requires something like this in .bash_login or .bashrc or wherever:

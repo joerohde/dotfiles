@@ -18,41 +18,47 @@ MYUNAME=${MYUNAME%%_*}
 # If not running interactively, don't do anything elsem except hard init
 # nvm.  Kind of sucks, but when vscode remote-ssh jumps in, it doesn't give
 # any conditional context/options to know it's vscode - which will need nvm access
-[[ $- == *i* ]] || [[ $TERM_PROGRAM == "vscode" ]] || { . "$NVM_DIR/nvm.sh"; return; }
+[[ $- == *i* ]] || [[ $TERM_PROGRAM == "vscode" ]] || {
+    . "$NVM_DIR/nvm.sh"
+    return
+}
 
 [[ -n "${GREP_COLORS}" ]] || exec env bash -l
 
 [ -s "$NVM_DIR/nvm.sh" ] && \. ~/.local/bin/lazynvm # This lazy loads nvm, not optional if nvm is installed
 
-
 function path_remove() { export PATH=$(echo -n $PATH | awk -v RS=: -v ORS=: '$0 != "'$1'"' | sed 's/:$//'); }
 function prepend_path() {
     path_remove "$2"
-    eval "export $1=$2:\$$1"
+    if [[ -d "$2" ]]; then
+        eval "export $1=$2:\$$1"
+    fi
 }
 function append_path() {
     path_remove "$2"
-    eval "export $1=\$$1:$2"
+    if [[ -d "$2" ]]; then
+        eval "export $1=\$$1:$2"
+    fi
 }
 
 # MacPorts Installer addition on 2009-12-15_at_20:30:37: adding an appropriate PATH/MANPATH variable for use with MacPorts.
 # take out /opt/local/libexec/gnubin since it screws with HBO build's use of 'cp' Grrr!!! Probably need to use 'gcp' and such in my local scripts
 [[ -d /opt/local/libexec ]] &&
-    export PATH=/opt/local/libexec/gnubin:/opt/local/bin:/opt/local/sbin:$PATH
+    export PATH=$PATH:/opt/local/libexec/gnubin:/opt/local/bin:/opt/local/sbin
 
 [[ -d /usr/local/opt ]] &&
-    export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/sbin:$PATH
+    export PATH=$PATH:/usr/local/opt/coreutils/libexec/gnubin:/usr/local/sbin
 
 [[ -d /usr/local/share/man ]] &&
-    export MANPATH=/opt/local/share/man:$MANPATH
+    export MANPATH=$MANPATH:/opt/local/share/man
 
 prepend_path PATH ~/.local/bin
+append_path PATH ~/go/bin
 
 [[ -n $SSH_CLIENT || -n $SSH_CONNECTION || -n $SSH_TTY ]] && isSSH=true
 
-[[ -r ~/.aliases ]] && . ~/.aliases
-
-[[ -r ~/.functions ]] && . ~/.functions
+[[ -r "$HOME/.aliases" ]] && . "$HOME/.aliases"
+[[ -r "$HOME/.functions" ]] && . "$HOME/.functions"
 
 if [ ${SHLVL} -le 1 ]; then
     IGNOREEOF=16
@@ -86,9 +92,9 @@ function _buildprompt() {
     # the terminal as if it was a keyboard.  The stty to raw interacts poorly.
     # As such we do some deferred iterm2 detection outside startup, the 2nd time
     # we build the prompt.  Yeah... gross.
-    if [[ -n "$TABCOLOR" ]] && [[ -z $isiTerm2  ]]; then
-    	# echo "checking isIterm2..."
-        if hash isiterm2.sh >& /dev/null && isiterm2.sh &&[[ -r ~/.iterm2_shell_integration.bash ]]; then
+    if [[ -n "$TABCOLOR" ]] && [[ -z $isiTerm2 ]]; then
+        # echo "checking isIterm2..."
+        if hash isiterm2.sh >&/dev/null && isiterm2.sh && [[ -r ~/.iterm2_shell_integration.bash ]]; then
             . ~/.iterm2_shell_integration.bash
             isiTerm2=true
         else
@@ -147,19 +153,22 @@ function lazy_nvm_use_check() {
     # finally - a better performing auto-use-nvm hack...
     # nvm is lazy loaded for startup perf. Don't check if it hasn't loaded yet.
     local LOADED_NVM
+    local STAT="stat"
     LOADED_NVM=$(builtin type -t "nvm_find_nvmrc")
 
+    command -v gstat >/dev/null && STAT="gstat"
+
     # if there's a known nvm home directory, get it's current mod time to see if it changed
-    [[ -f "$LKG_NVMRC" ]] && CURRENT_CHANGED=$(stat -c "%y" "$LKG_NVMRC")
+    [[ -f "$LKG_NVMRC" ]] && CURRENT_CHANGED=$(${STAT} -c "%y" "$LKG_NVMRC")
 
     # if we changed directory, or the mod time changed, see if we need to do 'nvm use'
-    if [[ -n "$LOADED_NVM" && ( "$PWD" != "$LKG_PWD" || "$CURRENT_CHANGED" != "$LKG_CHANGED"  ) ]]; then
+    if [[ -n "$LOADED_NVM" && ("$PWD" != "$LKG_PWD" || "$CURRENT_CHANGED" != "$LKG_CHANGED") ]]; then
         # find where nvm thinks the rc file is
         local CURRENT_NVMRC
         CURRENT_NVMRC=$(nvm_find_nvmrc)
 
         # we won't load it if it hasn't changed
-        [[  "$CURRENT_NVMRC" != "$LKG_NVMRC" ]]
+        [[ "$CURRENT_NVMRC" != "$LKG_NVMRC" ]]
         local location_changed=$?
 
         [[ -z "$CURRENT_NVMRC" ]] && LKG_CHANGED=0
@@ -181,7 +190,7 @@ function lazy_nvm_use_check() {
                 fi
             fi
             LKG_NVMRC="$CURRENT_NVMRC"
-            LKG_CHANGED=$(stat -c "%y" "$CURRENT_NVMRC")
+            LKG_CHANGED=$(${STAT} -c "%y" "$CURRENT_NVMRC")
         fi
         LKG_PWD="$PWD"
     fi
@@ -191,7 +200,7 @@ function lazy_nvm_use_check() {
 
 [[ -r ${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh ]] && . ${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh
 [[ -r ${HOMEBREW_PREFIX}/etc/profile.d/cdargs-bash.sh ]] && . ${HOMEBREW_PREFIX}/etc/profile.d/cdargs-bash.sh
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
 if [ -n "$PS1" ]; then
     shopt -s autocd cdspell cmdhist direxpand dirspell globstar histappend histreedit nocaseglob no_empty_cmd_completion
@@ -211,8 +220,11 @@ fi
 [[ -r "$HOME/.bashrc.local" ]] && . "$HOME/.bashrc.local"
 [[ -r "$HOME/.local/bin/cd.sh" ]] && . "$HOME/.local/bin/cd.sh"
 
+[[ -r "$HOME/.bashrc.ignore" ]] && . "$HOME/.bashrc.ignore"
+
+eval complete -f _precommand goos
+
 echo -n
 
 #set +x
 #exec 2>&3 3>&-
-

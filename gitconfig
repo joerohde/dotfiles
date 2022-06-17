@@ -29,6 +29,8 @@
 [core]
 	excludesfile = ~/.gitignore_global
 	autocrlf = input
+	editor = code --wait
+	pager = "bat"
 
 [alias]
 	dt = difftool --tool=araxis --dir-diff
@@ -46,3 +48,9 @@
 
 [rebase]
 	autoStash = true
+	autosquash = true
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[push]
+	autoSetupRemote = true

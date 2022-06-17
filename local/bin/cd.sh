@@ -7,15 +7,14 @@
 # dynamic scope: flags [out]: inclusively up to the last flag/switch as an array
 # dynamic scope: directory [out]: remaining arguments as a string
 # "$@" [in]: command line to munge
-function _cd_dirname()
-{
+function _cd_dirname() {
     local count
     count=1
     for arg in "$@"; do
         # it's flag for our purposes if it starts with + or -
         if [[ "$arg" =~ ^[+-].* ]]; then
             flags+=("$arg")
-            (( count++ ))
+            ((count++))
         else
             break
         fi
@@ -23,11 +22,10 @@ function _cd_dirname()
     directory="${*:${count}}"
 }
 
-function _cd_pushd()
-{
+function _cd_pushd() {
     [[ "$1" == "" ]] && shift
     # dirs is empty (+0 is cwd)
-    if dirs +1 &> /dev/null; then
+    if dirs +1 &>/dev/null; then
         local dest
         local top
         dest="${*:-1}"
@@ -43,8 +41,7 @@ function _cd_pushd()
 }
 
 # shellcheck disable=SC2120
-function cd()
-{
+function cd() {
     #dynamic scope parameters
     local flags directory
     flags=()
@@ -60,8 +57,8 @@ function cd()
 
     local rc=1
     if [[ -f "$directory" ]]; then
-	    local dir=$(dirname "$directory")
-	    [[ -d $dir ]] && directory="$dir"
+        local dir=$(dirname "$directory")
+        [[ -d $dir ]] && directory="$dir"
     fi
 
     if [[ "$directory" =~ ^\.\.+$ ]]; then
@@ -69,7 +66,7 @@ function cd()
         local i=${#directory}
         _cd_pushd ..
         while [ $i -gt 2 ]; do
-            (( i-- ))
+            ((i--))
             builtin cd .. || builtin cd "$(dirname "PWD")" || return $?
             rc=$?
         done
@@ -78,20 +75,21 @@ function cd()
         local n
         n="$directory"
         _cd_pushd ~+${n}
-        (( n++ ))
+        ((n++))
         buildin popd "+${n}" >/dev/null
     fi
     _cd_pushd "${flags[*]}" "$directory"
     return $?
 }
 
-function _cdd_find()
-{
-    mdfind -onlyin . "kMDItemDisplayName == '$1'c && kMDItemContentTypeTree == 'public.folder'c" \
-		  | while read -r line; do echo "$(stat -c %Z "$line")" "$line"; done | sort -rn | cut -f 2- -d ' '
+function _cdd_find() {
+    STAT=stat
+    if command -v gstat >/dev/null; then STAT=gstat; fi
+
+    mdfind -onlyin . "kMDItemDisplayName == '$1'c && kMDItemContentTypeTree == 'public.folder'c" |
+        while read -r line; do echo "$(${STAT} -c %Z "$line")" "$line"; done | sort -rn | cut -f 2- -d ' '
 }
-function cdd()
-{
+function cdd() {
     local flags directory
     flags=()
     directory=
@@ -99,7 +97,7 @@ function cdd()
 
     if [ -d "$directory" ]; then
         _cd_pushd "${flags[*]}" "$directory"
-	    return $?
+        return $?
     fi
 
     # find best match directories and sort them by 'last change' stat
@@ -107,66 +105,69 @@ function cdd()
     dirs=$(_cdd_find "$1")
 
     # if the list is a little short, add in prefix matches, below exact matches
-    if (( $(wc -l <<< "$dirs") < 32 )); then
+    if (($(wc -l <<<"$dirs") < 32)); then
         prefix=$(_cdd_find "$1*")
-        dirs+=$'\n'$(awk 'FNR==NR {a[$0]++; next} !($0 in a)' <(echo "$dirs") <(echo "$prefix") )
+        dirs+=$'\n'$(awk 'FNR==NR {a[$0]++; next} !($0 in a)' <(echo "$dirs") <(echo "$prefix"))
     fi
 
     # still too low? Add any general match to the bottom
-    if (( $(wc -l <<< "$dirs") < 32 )); then
+    if (($(wc -l <<<"$dirs") < 32)); then
         fuzzy=$(_cdd_find "*$1*")
-        dirs+=$'\n'$(awk 'FNR==NR {a[$0]++; next} !($0 in a)' <(echo "$dirs") <(echo "$fuzzy") )
+        dirs+=$'\n'$(awk 'FNR==NR {a[$0]++; next} !($0 in a)' <(echo "$dirs") <(echo "$fuzzy"))
     fi
 
     dirs=${dirs//$PWD\//.\/}
+    dirs=$(grep -v '^$' <<<"$dirs")
 
     local -a lines=()
     local txt
-    while read -r txt ; do
+    while read -r txt; do
         lines+=("$txt")
     done <<EOF
 $(printf "%s" "$dirs")
 EOF
     if [ "${#lines[@]}" == "0" ]; then
         echo "cdd: no subdirectory found: ${directory}"
-	    cd
-	    return $?
+        cd
+        return $?
     elif [ "${#lines[@]}" == "1" ]; then
-	    _cd_pushd "${flags[*]}" "${lines[$item]}"
-	    return $?
+        _cd_pushd "${flags[*]}" "${lines[$item]}"
+        return $?
     fi
 
-    which dialog > /dev/null 2>&1
+    which dialog >/dev/null 2>&1
     if [ "$?" != "0" ]; then
-	    echo -e "cdd requires dialog package\nInstall with: [brew|sudo port] install dialog" 1>&2
-	    return 100
+        echo -e "cdd requires dialog package\nInstall with: [brew|sudo port] install dialog" 1>&2
+        return 100
     fi
 
     dirs=$(printf "%s" "$dirs" | awk '{ printf "\"%d\" \"" $0 "\"\n", NR }')
     local item
     item=$(eval dialog --stdout --keep-tite --menu \"Select Directory\" 0 0 0 $dirs)
     if [[ "$?" != "0" ]] || [[ -z "$item" ]]; then
-	    return $?
+        return $?
     fi
 
-    (( item-- ))
+    ((item--))
     _cd_pushd "${flags[*]}" "${lines[$item]}"
     return $?
 }
 
-function cd_debug_trap()
-{
+function cd_debug_trap() {
     local CMD="$BASH_COMMAND"
     if [[ "$CMD" == "." ]]; then
-	    builtin pushd >/dev/null
+        builtin pushd >/dev/null
         return 1
     elif [[ "$CMD" =~ ^\.+$ ]]; then
         local i=${#CMD}
         while [[ $i -gt 1 ]]; do
             test "$(dirs -p | wc -l)" -eq 1 && break
             builtin popd >/dev/null
-            [[ "$?" == "0" ]] || { builtin popd -n >/dev/null; (( i++ )); }
-            (( i-- ))
+            [[ "$?" == "0" ]] || {
+                builtin popd -n >/dev/null
+                ((i++))
+            }
+            ((i--))
         done
         return 1
     fi

@@ -34,7 +34,7 @@ EIGHTBIT 1
 
 # Below are the color init strings for the basic file types. A color init
 # string consists of one or more of the following numeric codes:
-# Attribute codes: 
+# Attribute codes:
 # 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
 # Text color(8 colors mode) codes:
 # 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
@@ -92,12 +92,14 @@ EXEC 01;38;5;82
 .m 01;38;5;82
 .mm 01;38;5;82
 .swift 01;38;5;82
+.go 01;38;5;82
+.ts 01;38;5;208
 #scripty source code
 .html 01;38;5;227
 .js 01;38;5;227
 .json 01;38;5;227
  # archives or compressed (bright red)
-.tar 01;38;5;9 
+.tar 01;38;5;9
 .tgz 01;38;5;9
 .svgz 01;38;5;9
 .arj 01;38;5;9
@@ -123,7 +125,7 @@ EXEC 01;38;5;82
 .7z  01;38;5;9
 .rz  01;38;5;9
 # image formats (magenta)
-.jpg 01;38;5;13 
+.jpg 01;38;5;13
 .jpeg 01;38;5;13
 .gif 01;38;5;13
 .bmp 01;38;5;13

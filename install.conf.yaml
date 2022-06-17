@@ -13,10 +13,14 @@
     ~/.bash_login:
     ~/.aliases:
     ~/.functions:
+    ~/.zshrc:
+    ~/.zshenv:
+    ~/.p10k.zsh:
     ~/.dialogrc:
     ~/.dircolors:
     ~/.dotbot:
     ~/.emacs:
+    ~/.env:
     ~/.gitconfig:
     ~/.gitignore_global:
     ~/.inputrc:
@@ -53,3 +57,7 @@
       create: true
       prefix: ''
       path: local/etc/*
+    ~/.config/:
+      create: true
+      prefix: ''
+      path: config/**

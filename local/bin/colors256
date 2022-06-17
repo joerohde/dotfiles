@@ -1,27 +1,22 @@
-#!/bin/bash
-#
-# generates an 8 bit color table (256 colors) for
-# reference purposes, using the \033[48;5;${val}m
-# ANSI CSI+SGR (see "ANSI Code" on Wikipedia)
-#
-echo -en "\n   +  "
-for i in {0..35}; do
-  printf "%2b " $i
-done
+#!/usr/bin/env zsh
 
-printf "\n\n %3b  " 0
-for i in {0..15}; do
-  echo -en "\033[48;5;${i}m  \033[m "
-done
+#for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done
+#echo "\n"
 
-#for i in 16 52 88 124 160 196 232; do
-for i in {0..6}; do
-  let "i = i*36 +16"
-  printf "\n\n %3b  " $i
-  for j in {0..35}; do
-    let "val = i+j"
-    echo -en "\033[48;5;${val}m  \033[m "
+# color by smoothness (mostly) instead of numerically
+b=0
+for i in {0..5} {41..36}; do
+  for j in {1..6} {13..18} {25..30} {37..39..2}; do
+    (( $j >= 36 )) && i=$b # keep black in order
+    k=$(( (j * 6) + 10 + i ))
+    print -Pn "%K{$k}  %k%F{$k}${(l:3::0:)k}%f "
   done
+  (( b++ ))
+  printf "\n"
 done
 
-echo -e "\n"
+printf "\n"
+for k in {0..15}; do
+  print -Pn "%K{$k}  %k %F{$k}${(l:2::0:)k}%f "
+done
+printf "\n"

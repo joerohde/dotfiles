@@ -1,9 +1,13 @@
+funcion bat()
+{
+	batcat "$@"
+}
+
 function checkupdate()
 {
 	/usr/lib/update-notifier/apt-check --human-readable
 	cat /var/run/reboot-required 2>/dev/null
 }
-export -f checkupdate
 
 function _funcfind()
 {
@@ -38,3 +42,4 @@ if [[ "$PWD" == "$HOME" ]]; then
 fi
 
 append_path PATH ~/.local/bin/
+append_path PATH /usr/local/go/bin/

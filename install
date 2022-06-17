@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+#set -x
 export UNAME
 UNAME="$(uname)"
 
@@ -18,7 +19,6 @@ function main {
     DOTBOT_DIR="dotbot"
     DOTBOT_BIN="bin/dotbot"
     BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
     cd "${BASEDIR}"
     git fetch -q
     if [[ -z ${RESTART} ]]; then
@@ -30,19 +30,32 @@ function main {
     git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
     git submodule update --init --recursive "${DOTBOT_DIR}"
 
-    # cleanup some old 'uname' messes
-    (( $(date --date='July 04 2022' +%s) < $(date +%s) )) && printf "\n\a\e[1;91mdotfiles/install:%d - Remove This Cleanup Code!\e[0m\n\n" ${LINENO}
-    rm -f ~/.gitconfig.* ~/.bashrc.* ~/.install ~/.install.conf.yaml ~/.lessfilter
-
     # Will access ${UNAME} in install.conf.yaml
     "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -q -d "${BASEDIR}" -c "${CONFIG}" "${@}"
 
     if [[ "${UPDATE_ONLY}" != "true" ]]; then
-        install pip3 python3-pip
-        install pygmentize pygments "pip3 install pygments"
-        install dircolors coreutils
+        install python3-pip pip3
+        install coreutils dircolors
         install tmux tmux
         # install aws awscli
+
+        # some installs can't be abstracteed away
+        case "${UNAME}" in
+        *Darwin*)
+            install font-source-code-pro
+            install font-fira-code
+            install font-consolas-for-powerline
+            install pygments pygmentize
+            install pyyaml
+            install bat
+            ;;
+        *Linux*)
+            install pygments pygmentize "pip3 install pygments"
+            ;;
+        *)
+            echo "install: unknown platform - $(uname)"
+            ;;
+        esac
     fi
 }
 
@@ -55,39 +68,57 @@ function uptodate() {
 
     [[ -r "${UPDATE_FILE}" ]] || return 1
 
-    UPDATED_SINCE_SECONDS=$(( (60 * 60 * 24 * UPDATED_SINCE_DAYS) ))
-    UPDATED_SINCE_SECONDS=$(( NOW - UPDATED_SINCE_SECONDS ))
+    UPDATED_SINCE_SECONDS=$((60 * 60 * 24 * UPDATED_SINCE_DAYS))
+    UPDATED_SINCE_SECONDS=$((NOW - UPDATED_SINCE_SECONDS))
 
     STAT_UPDATE=$(stat --format=%Z "${UPDATE_FILE}")
 
-    (( STAT_UPDATE != 0 && STAT_UPDATE > UPDATED_SINCE_SECONDS ))
+    ((STAT_UPDATE != 0 && STAT_UPDATE > UPDATED_SINCE_SECONDS))
+}
+
+function update_brew() {
+    brew update
+    brew analytics off
+}
+
+function install_brew() {
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    update_brew
 }
 
 function install() {
     local BINARY PACKAGE INSTALL_CMD
-    BINARY="$1"
-    PACKAGE="$2"
+    PACKAGE="$1"
+    BINARY="$2"
 
+    TEST_INSTALL='command -v "${BINARY}"'
     case "${UNAME}" in
-    (*Darwin*)
+    *Darwin*)
         INSTALL_CMD="${3:-brew install -q -f}"
-        command -v "brew" >/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        uptodate "${HOMEBREW_REPOSITORY}/Library/Taps/homebrew/homebrew-core/synced_versions_formulae.json" || brew update
+        command -v "brew" >/dev/null || install_brew
+        uptodate "$(brew --cache)/api/formula.jws.json" || update_brew
+        [[ $BINARY == "" ]] && TEST_INSTALL='brew list ${PACKAGE}'
         ;;
-    (*Linux*)
+    *Linux*)
         INSTALL_CMD="${3:-sudo apt-get install -qq -y}"
         # hack - if apt doesnt' know about pip, it may be a mew container, never updated
         { [[ -n $(apt-cache search --names-only '^python3-pip$') ]] && uptodate /var/cache/apt; } ||
-            { echo Running apt-get update; sudo apt-get -qq -y update; }
+            {
+                echo Running apt-get update
+                sudo apt-get -qq -y update
+            }
         ;;
-    (*)
+    *)
         echo "install: unknown platform - $(uname)"
         return
         ;;
-    esac;
+    esac
 
-    command -v "${BINARY}" >/dev/null ||
-        { echo "Installing: ${PACKAGE}..."; ${INSTALL_CMD} "${PACKAGE}"; }
+    eval "${TEST_INSTALL}" >/dev/null ||
+        {
+            echo "Installing: ${PACKAGE}..."
+            ${INSTALL_CMD} "${PACKAGE}"
+        }
 }
 
 export DEBIAN_FRONTEND=noninteractive

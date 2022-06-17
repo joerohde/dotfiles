@@ -1,5 +1,10 @@
 #!/bin/bash
 
+{ _autossh="/opt/homebrew/bin" && [[ -x ${_autossh}/autossh ]]; } ||
+    { _autossh="/opt/local/bin" && [[ -x ${_autossh}/autossh ]]; } ||
+    { _autossh="/usr/local/bin" && [[ -x ${_autossh}/autossh ]]; } || unset _autossh
+AUTOSSH="$_autossh/autossh"
+
 count=$(pgrep -fi "caffeinate" | wc -l)
 if [[ $count -eq 0 ]]; then
     caffeinate -s &
@@ -14,7 +19,7 @@ pkill -9 autossh
 #export AUTOSSH_DEBUG=1
 #export AUTOSSH_LOGFILE="$HOME/tmp/autossh.log</string"
 
-/usr/local/bin/autossh -M 0 -q -f -nNT -R \*:2222:localhost:22 -R \*:6900:localhost:5900 home
-# /usr/local/bin/autossh -M 0 -q -f -nNT -R \*:2222:localhost:22 -R \*:6900:localhost:5900 vhome
+${AUTOSSH} -M 0 -q -f -nNT -R \*:2222:jrohde@localhost:22 -R \*:6900:jrohde@localhost:5900 home
+# ${AUTOSSH} -M 0 -q -f -nNT -R \*:2222:localhost:22 -R \*:6900:localhost:5900 vhome
 
-/usr/local/bin/autossh -M 0 -q -f -N -g -D 2112 localhost
+${AUTOSSH} -M 0 -q -f -N -g -D 2112 jrohde@localhost

@@ -3,58 +3,63 @@
 #    exec env arch -arm64 bash
 
 if [[ ! -f ~/.gitlocal ]]; then
-cat << EOF > ~/.gitlocal
+    cat <<EOF >~/.gitlocal
 [credential]
     helper = osxkeychain
 EOF
 fi
-
-prepend_path PATH "/usr/local/opt/python@3.8/bin"
 
 alias merge="open '/Applications/Araxis Merge.app'"
 alias lock="pmset displaysleepnow"
 alias stripansi="gsed -r -e 's/\x1B\[([0-9]{1,3};)*([0-9]{1,3}?)[ABCDEFGHJKSTmsu]//g'"
 alias xargs="gxargs "
 
-function _funcfind()
-{
-	 mdfind -onlyin . -name "$@" | sed -e "s:$(grealpath ".")/:./:"
+function _funcfind() {
+    mdfind -onlyin . -name "$@" 2>/dev/null | sed -e "s:$(grealpath ".")/:./:"
 }
 
-function _funcgrep()
-{
-	 mdfind -onlyin . "kMDItemKind != Folder && kMDItemTextContent == '$@*'c" | sed -e "s:$(grealpath ".")/:./:"
+function _funcgrep() {
+    mdfind -onlyin . "kMDItemKind != Folder && kMDItemTextContent == '$@*'c" 2>/dev/null | sed -e "s:$(grealpath ".")/:./:"
 }
 
 function pman { man -t "$@" | open -f -a preview; }
 
-function fmount()
-{
-     local ro="-r"
+function fmount() {
+    local ro="-r"
 
-     if [ "$1" == "-w" ]; then
-          ro=""
-          shift
-     fi
+    if [ "$1" == "-w" ]; then
+        ro=""
+        shift
+    fi
 
-     mkdir "$HOME/mount/$1" 2>/dev/null
-     mount $ro -t smbfs "//joer@fileserver/$1" "$HOME/mount/$1"
-     if [ "$?" == "0" ]; then
-          local mode="read-only"
-          test -z "$ro" && mode="writeable"
-          echo "Mounted $mode at ~/mount/$1"
-     fi
+    mkdir "$HOME/mount/$1" 2>/dev/null
+    mount $ro -t smbfs "//joer@fileserver/$1" "$HOME/mount/$1"
+    if [ "$?" == "0" ]; then
+        local mode="read-only"
+        test -z "$ro" && mode="writeable"
+        echo "Mounted $mode at ~/mount/$1"
+    fi
 }
 
-function fumount()
-{
+function fumount() {
     umount -t smbfs "$HOME/mount/$1"
     if [ "$?" == "0" ]; then
         echo "Unmounted ~/mount/$1"
     fi
 }
 
-function fdir()
-{
+function fdir() {
     mount | grep "$HOME/mount"
+}
+
+# multipass helper
+function mp() {
+    # TODO: support a flag to specify instance name
+    if [[ -z $1 ]]; then
+        multipass exec primary -- zsh
+    elif [[ $1 == -* ]]; then
+        multipass "$@"
+    else
+        multipass exec primary -- "$@"
+    fi
 }

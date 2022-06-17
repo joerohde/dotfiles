@@ -3,16 +3,20 @@
 uname=$(uname);
 case "$uname" in
     (*Darwin*)
+        dotdiff
         type -t port >/dev/null && (sudo port -u selfupdate; sudo port -u upgrade outdated)
         brew update; brew upgrade; brew upgrade --cask; brew cleanup
         ;;
     (*Linux*)
+        dotdiff
         sudo apt-get -y update;       sleep 1
         sudo apt-get -y dist-upgrade; sleep 1
         sudo apt-get -y upgrade;      sleep 1
         sudo apt-get -y autoremove;   sleep 1
+        # checkupdate
         echo
-        checkupdate
+        /usr/lib/update-notifier/apt-check --human-readable;
+        cat /var/run/reboot-required 2> /dev/null
         ;;
     (*CYGWIN*)
     (*MINGW*)
