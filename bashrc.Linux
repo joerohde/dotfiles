@@ -1,44 +1,46 @@
-funcion bat()
-{
+function bat() {
 	batcat "$@"
 }
 
-function checkupdate()
-{
+function checkupdate() {
 	/usr/lib/update-notifier/apt-check --human-readable
 	cat /var/run/reboot-required 2>/dev/null
 }
 
-function _funcfind()
-{
-	. find-dbus tracker-store &> /dev/null
-	[[ -n $DBUS_SESSION_BUS_ADDRESS ]] || (echo "Can't find DBUS"; return)
+function _funcfind() {
+	. find-dbus tracker-store &>/dev/null
+	[[ -n $DBUS_SESSION_BUS_ADDRESS ]] || (
+		echo "Can't find DBUS"
+		return
+	)
 
 	local basepath="file://$(realpath "$PWD")/"
-	tracker sparql -q "SELECT ?url WHERE { ?s a nfo:FileDataObject ;  nie:url ?url . FILTER(regex(?url,\"$basepath.*$@\",'i')). }" | \
-		tail -n +2 | head -n -1 | \
+	tracker sparql -q "SELECT ?url WHERE { ?s a nfo:FileDataObject ;  nie:url ?url . FILTER(regex(?url,\"$basepath.*$@\",'i')). }" |
+		tail -n +2 | head -n -1 |
 		sed -e "s|\s*$basepath|./|"
 
 	unset -v DBUS_SESSION_BUS_ADDRESS
 }
 
-function _funcgrep()
-{
-	. find-dbus tracker-store &> /dev/null
-	[[ -n $DBUS_SESSION_BUS_ADDRESS ]] || (echo "Can't find DBUS"; return)
+function _funcgrep() {
+	. find-dbus tracker-store &>/dev/null
+	[[ -n $DBUS_SESSION_BUS_ADDRESS ]] || (
+		echo "Can't find DBUS"
+		return
+	)
 
 	local basepath="file://$(realpath "$PWD")/"
 
-	tracker sparql -q "SELECT ?url WHERE { ?s a nfo:FileDataObject ; fts:match \"$@\"; nie:url ?url . FILTER(regex(?url,\"$basepath\",'i')). }" | \
-		tail -n +2 | head -n -1 | \
+	tracker sparql -q "SELECT ?url WHERE { ?s a nfo:FileDataObject ; fts:match \"$@\"; nie:url ?url . FILTER(regex(?url,\"$basepath\",'i')). }" |
+		tail -n +2 | head -n -1 |
 		sed -e "s|\s*$basepath|./|"
 
 	unset -v DBUS_SESSION_BUS_ADDRESS
 }
 
 if [[ "$PWD" == "$HOME" ]]; then
-	[[ -d /mnt/c/Users/joe/ ]] && pushd /mnt/c/Users/joe/ >/dev/null
-	[[ -d /mnt/d/Source/ ]] && pushd /mnt/d/Source/ >/dev/null
+	[[ -d /mnt/c/Users/joe/ ]] && pushd /mnt/c/Users/joe/ >/dev/null || exit
+	[[ -d /mnt/d/Source/ ]] && pushd /mnt/d/Source/ >/dev/null || exit
 fi
 
 append_path PATH ~/.local/bin/

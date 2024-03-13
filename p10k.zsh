@@ -155,10 +155,10 @@
   # '─'. The last two make it easier to see the alignment between left and right prompt and to
   # separate prompt from command output. You might want to set POWERLEVEL9K_PROMPT_ADD_NEWLINE=false
   # for more compact prompt if using this option.
-  typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_GAP_CHAR='┈'
+  typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_GAP_CHAR='▁'
   typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_GAP_FOREGROUND=241
   typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_GAP_BACKGROUND=
-  typeset -g POWERLEVEL9K_RULER_CHAR='┈'
+  typeset -g POWERLEVEL9K_RULER_CHAR='▔'
   typeset -g POWERLEVEL9K_RULER_FOREGROUND=245
   typeset -g POWERLEVEL9K_RULER_BACKGROUND=0
 
@@ -1725,20 +1725,20 @@ function p10k-on-post-prompt() {
   # p10k display command above.  Fudge factor for removing the right frame
   #print -P "\nl: $_p9k__lprompt\nr: $_p9k__rprompt\n\n"
 
-  _p9k_prompt_length "${_p9k__lprompt}"
+   _p9k_prompt_length "${_p9k__lprompt}"
   local left_len=$(( _p9k__ret ))
 
   _p9k_prompt_length "${_p9k__rprompt}"
   local right_len=$(( _p9k__ret ))
 
-  # loses state complete. :(
+  # # loses state complete. :(
   local context="%F{$POWERLEVEL9K_CONTEXT_FOREGROUND}$POWERLEVEL9K_CONTEXT_TEMPLATE"
   local context_len=$((${#$(print -P "$POWERLEVEL9K_CONTEXT_TEMPLATE")}))
 
-  local gap_width=$(( COLUMNS - (left_len + right_len + ${#BUFFER} + context_len) ))
+  local gap_width=$(( COLUMNS - (left_len + right_len + ${#BUFFER} + context_len + 1) ))
 
-  # repeating expansion of GAP_CHAR to generate the gap line
-  local gap_char="‾"
+  # # repeating expansion of GAP_CHAR to generate the gap line
+  local gap_char="▔"
   local gap="${(pl:gap_width::$gap_char:)}"
 
   # symmetry: space after gap line because there must be 1 after BUFFER or RPROMPT is suppressed

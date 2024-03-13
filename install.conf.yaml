@@ -28,6 +28,21 @@
     ~/.LESS_TERMCAP:
     ~/.tmux.conf:
 
+    # directories
+    ~/.emacs.d:
+    ~/.local/bin:
+      create: true
+      prefix: ''
+      path: local/bin/*
+    ~/.local/etc:
+      create: true
+      prefix: ''
+      path: local/etc/*
+    ~/.config/:
+      create: true
+      prefix: ''
+      path: config/**
+
     # uname abstracted files
     ~/.bashrc.local:
       path: bashrc.${UNAME}
@@ -47,17 +62,8 @@
       prefix: ''
       create: true
 
-    # directories
-    ~/.emacs.d:
-    ~/.local/bin:
-      create: true
+    ~/.local/bin/bat:
+      if: '[ "$UNAME" == "Linux" ]'
+      path: /usr/bin/batcat
       prefix: ''
-      path: local/bin/*
-    ~/.local/etc:
       create: true
-      prefix: ''
-      path: local/etc/*
-    ~/.config/:
-      create: true
-      prefix: ''
-      path: config/**
