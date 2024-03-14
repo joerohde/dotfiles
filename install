@@ -37,6 +37,7 @@ function main {
         install python3-pip pip3
         install coreutils dircolors
         install tmux tmux
+        install bat
         # install aws awscli
 
         # some installs can't be abstracteed away
@@ -47,7 +48,6 @@ function main {
             install font-consolas-for-powerline
             install pygments pygmentize
             install pyyaml
-            install bat
             ;;
         *Linux*)
             install pygments pygmentize "pip3 install pygments"
