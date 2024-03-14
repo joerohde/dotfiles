@@ -7,9 +7,9 @@ UNAME="$(uname)"
 command -v gdate >/dev/null && date() { gdate "$@"; } && export -f date
 command -v gstat >/dev/null && stat() { gstat "$@"; } && export -f stat
 
-function main {
-    [[ "$SHELL" =~ /bash$ ]] || sudo chsh -s "$(command -v bash)" "$(whoami)"
+PIP_INSTALL='pip3 install --disable-pip-version-check'
 
+function main {
     if [[ "$1" == "-u" || "$1" == "--update" ]]; then
         UPDATE_ONLY="true"
         shift
@@ -30,32 +30,36 @@ function main {
     git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
     git submodule update --init --recursive "${DOTBOT_DIR}"
 
-    # Will access ${UNAME} in install.conf.yaml
-    "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -q -d "${BASEDIR}" -c "${CONFIG}" "${@}"
-
     if [[ "${UPDATE_ONLY}" != "true" ]]; then
         install python3-pip pip3
         install coreutils dircolors
         install tmux tmux
         install bat
         # install aws awscli
-
         # some installs can't be abstracteed away
         case "${UNAME}" in
         *Darwin*)
+            # hack to try and use local installed bash because the builtin is old
+            # probably won't work becasue the other bash won't be in /etc/shells
+            { [[ $(dscl . -read ~/ UserShell | sed -e 's|.* /|/|') =~ /bash$ ]]; } &&
+                { sudo chsh -s "$(command -v bash)" "$(whoami)"; }
+
             install font-source-code-pro
             install font-fira-code
             install font-consolas-for-powerline
             install pygments pygmentize
-            install pyyaml
+            install pyyaml "" "${PIP_INSTALL} pyyaml"
             ;;
         *Linux*)
-            install pygments pygmentize "pip3 install pygments"
+            install pygments pygmentize "${PIP_INSTALL} pygments"
             ;;
         *)
             echo "install: unknown platform - $(uname)"
             ;;
         esac
+
+        # Will access ${UNAME} in install.conf.yaml
+        "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -q -d "${BASEDIR}" -c "${CONFIG}" "${@}"
     fi
 }
 
@@ -87,17 +91,20 @@ function install_brew() {
 }
 
 function install() {
-    local BINARY PACKAGE INSTALL_CMD
+    local PACKAGE BINARY INSTALL_CMD
     PACKAGE="$1"
     BINARY="$2"
-
     TEST_INSTALL='command -v "${BINARY}"'
+
     case "${UNAME}" in
     *Darwin*)
         INSTALL_CMD="${3:-brew install -q -f}"
         command -v "brew" >/dev/null || install_brew
         uptodate "$(brew --cache)/api/formula.jws.json" || update_brew
+        # shellcheck disable=SC2016
         [[ $BINARY == "" ]] && TEST_INSTALL='brew list ${PACKAGE}'
+        # shellcheck disable=SC2016
+        [[ $INSTALL_CMD == *"pip3 install"* ]] && TEST_INSTALL='pip3 show --disable-pip-version-check ${PACKAGE}'
         ;;
     *Linux*)
         INSTALL_CMD="${3:-sudo apt-get install -qq -y}"
