@@ -19,7 +19,7 @@ fi
 
 export DONT_BREAK_ON_ASSERT=1
 
-export LESS="-X -i -M -s -S -x4 -R"
+export LESS="-X -i -M -s -S -x4 -j2 -R"
 
 export EDITOR="emacs -nw"
 export PAGER="bat"

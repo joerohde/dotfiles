@@ -1,0 +1,8 @@
+#command
+\e\e quit
+\eOD noaction 20\e(
+\eOC noaction 20\e)
+\e[1;5C noaction 10\e)
+\e[1;5D noaction 10\e(
+\e[1;2C noaction 40\e)
+\e[1;2D noaction 40\e(

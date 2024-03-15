@@ -27,6 +27,7 @@
     ~/.iterm2_shell_integration.bash:
     ~/.LESS_TERMCAP:
     ~/.tmux.conf:
+    ~/.lesskey:
 
     # directories
     ~/.emacs.d:
