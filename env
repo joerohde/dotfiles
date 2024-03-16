@@ -49,6 +49,8 @@ test -r ~/.LESS_TERMCAP && . ~/.LESS_TERMCAP
 test -r ~/.bash_login.local && . ~/.bash_login.local
 
 [[ -d ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin ]] &&
-    PATH=$PATH:${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin
+    PATH="$PATH:${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin"
+
+PATH="$PATH:${HOME}/go/bin"
 
 test -r ~/.local/etc/profile && . ~/.local/etc/profile
