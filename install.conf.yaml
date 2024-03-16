@@ -58,13 +58,13 @@
       create: true
 
     ~/Library/Application Support/iTerm2/DynamicProfiles/ExtraProfiles.json:
-      if: '[ "$UNAME" == "Darwin" ]'
+      if: '[ "$UNAME" = "Darwin" ]'
       path: iTerm2/DynamicProfiles/ExtraProfiles.json
       prefix: ''
       create: true
 
     ~/.local/bin/bat:
-      if: '[ "$UNAME" == "Linux" ]'
+      if: '[ "$UNAME" = "Linux" ]'
       path: /usr/bin/batcat
       prefix: ''
       create: true

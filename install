@@ -57,10 +57,10 @@ function main {
             echo "install: unknown platform - $(uname)"
             ;;
         esac
-
-        # Will access ${UNAME} in install.conf.yaml
-        "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -q -d "${BASEDIR}" -c "${CONFIG}" "${@}"
     fi
+
+    # Will access ${UNAME} in install.conf.yaml
+    "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -q -d "${BASEDIR}" -c "${CONFIG}" "${@}"
 }
 
 function uptodate() {

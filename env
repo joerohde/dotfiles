@@ -23,7 +23,7 @@ export LESS="-X -i -M -s -S -x4 -j2 -R"
 
 export EDITOR="emacs -nw"
 export PAGER="bat"
-export MANPAGER="manbat"
+export MANPAGER="less"
 
 #export LESSCOLORIZER='pygmentize -g -O style=dracula -f terminal16m %s'
 #export LESSOPEN="|- ${_lessopen} %s"
