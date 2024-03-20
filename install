@@ -41,7 +41,7 @@ function main {
         *Darwin*)
             # hack to try and use local installed bash because the builtin is old
             # probably won't work becasue the other bash won't be in /etc/shells
-            { [[ $(dscl . -read ~/ UserShell | sed -e 's|.* /|/|') =~ /bash$ ]]; } &&
+            { [[ $(dscl . -read ~/ UserShell | sed -e 's|.* /|/|') =~ ^/bin/bash$ ]]; } &&
                 { sudo chsh -s "$(command -v bash)" "$(whoami)"; }
 
             install font-source-code-pro

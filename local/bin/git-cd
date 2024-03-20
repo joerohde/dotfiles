@@ -3,37 +3,40 @@
 arg=$1
 REF=$(tail -n1 ~/.gitcd)
 
-function die()
-{
+function die() {
     echo "Error: $1"
     exit 1
 }
 
 if [[ ${arg} =~ \.\.+ ]]; then
-    COUNT=$((${#arg}-1))
+    COUNT=$((${#arg} - 1))
     REF=$(tail -n${COUNT} ~/.gitcd | head -n1)
-	[ -n "$REF" ] || die "No previous branch to pop $COUNT levels"
-	git checkout "$REF"
+    [ -n "$REF" ] || die "No previous branch to pop $COUNT levels"
+    git checkout "$REF"
     ex -snc "\$-${COUNT},\$d|x" ~/.gitcd
     exit $?
 fi
 
 case "$arg-" in
-    ".-")
-	    [ -n "$REF" ] || die "No previous branch to pop"
-	    CUR=$(git symbolic-ref HEAD | sed s_refs/heads/__)
-	    git checkout "$REF"
-        ex -snc "\$-${COUNT},\$d|x" ~/.gitcd
-        echo "$CUR" >> ~/.gitcd
-        ;;
-    "-")
-        echo "usage: git cd [branch-name|.|..]"
-        echo "current branch stack:"
-        cat ~/.gitcd | sed -e "s/^/   /g"
-        ;;
-    *)
-	[[ $(git branch --list "$1") ]] || [[ $(git branch --list --remote "origin/$1") ]] || die "No branch named: $1"
-	git symbolic-ref HEAD | sed s_refs/heads/__ >> ~/.gitcd
-	git checkout "$@"
-        ;;
+".-")
+    [ -n "$REF" ] || die "No previous branch to pop"
+    CUR=$(git symbolic-ref HEAD | sed s_refs/heads/__)
+    git checkout "$REF"
+    ex -snc "\$-${COUNT},\$d|x" ~/.gitcd
+    echo "$CUR" >>~/.gitcd
+    ;;
+"-")
+    echo "usage: git cd [branch-name|.|..]"
+    echo "current branch stack:"
+    cat sed -e "s/^/   /g" <~/.gitcd
+    ;;
+*)
+    [[ "$1" == "-b" ]] ||
+        [[ $(git branch --list "$1") ]] ||
+        [[ $(git branch --list --remote "origin/$1") ]] ||
+        die "No branch named: $1"
+
+    git symbolic-ref HEAD | sed s_refs/heads/__ >>~/.gitcd
+    git checkout "$@"
+    ;;
 esac
