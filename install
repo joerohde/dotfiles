@@ -34,7 +34,6 @@ function main {
         install python3-pip pip3
         install coreutils dircolors
         install tmux tmux
-        install bat
         # install aws awscli
         # some installs can't be abstracteed away
         case "${UNAME}" in
@@ -44,6 +43,7 @@ function main {
             { [[ $(dscl . -read ~/ UserShell | sed -e 's|.* /|/|') =~ ^/bin/bash$ ]]; } &&
                 { sudo chsh -s "$(command -v bash)" "$(whoami)"; }
 
+            install bat
             install font-source-code-pro
             install font-fira-code
             install font-consolas-for-powerline
@@ -52,6 +52,7 @@ function main {
             ;;
         *Linux*)
             install pygments pygmentize "${PIP_INSTALL} pygments"
+            install bat batcat
             ;;
         *)
             echo "install: unknown platform - $(uname)"
