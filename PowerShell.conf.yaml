@@ -1,0 +1,47 @@
+- defaults:
+    link:
+      relink: true
+      glob: true
+      force: true
+
+- shell:
+  - echo Updating dot files...
+
+- link:
+    # regular Powershell files
+    $ProfileRoot:
+      create: true
+      prefix: ''
+      path: PowerShell/*
+      exclude: [
+        PowerShell/.vscode,
+        PowerShell/install.ps1,
+        PowerShell/dotbot.ps1
+      ]
+
+    # common regular files
+    ~/.emacs:
+    ~/.gitconfig:
+    ~/.gitignore_global:
+    # ~/.LESS_TERMCAP:
+    ~/.lesskey:
+
+    # directories
+    ~/.emacs.d:
+    ~/.local/bin:
+      create: true
+      prefix: ''
+      path: PowerShell/local/bin/*
+    ~/.config/:
+      create: true
+      prefix: ''
+      path: config/**
+
+    ~/.gitconfig.local:
+      path: gitconfig.${UNAME}
+
+    # conditionals
+    ~/.vscode-remote/data/Machine/settings.json:
+      if: '[ -n "$CODESPACES" ]'
+      path: codespaces/vscode.settings.json
+      create: true

@@ -1,0 +1,193 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  //"transient_prompt": { "template": "BOo" },
+  "console_title_template": "{{ .Shell }} in {{ .Folder }}",
+  "blocks": [
+    {
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "shell",
+          "style": "plain",
+          "trailing_diamond": "<#7c7c7c>|</>",
+          //"background": "#ffffff",
+          "foreground": "#ecf028",
+          "properties": {
+            "mapped_shell_names": {
+              "pwsh": "\uE683"
+            }
+          }
+        },
+        {
+          "foreground": "#f58d31",
+          "style": "diamond",
+          "trailing_diamond": "<#7c7c7c>|</>",
+          "properties": {
+            "display_distro_name": false
+          },
+          "template": "{{.Icon}}{{ if .WSL }}/\uE62A{{ end }} {{ lower .Env.ARCH }}",
+          "type": "os"
+        },
+        {
+          "foreground": "#e275ab",
+          "foreground_templates": [
+            "{{if .SSHSession }}#ecf028{{end}}",
+            "{{if .Root }}#ffffff{{end}}"
+          ],
+          "background_templates": ["{{if .Root }}#ff0f0f{{end}}"],
+          "style": "diamond",
+          "template": "{{if .Root}}<b>{{end}}{{if .SSHSession}}<u>ˢˢʰ{{end}}{{ .UserName }}@{{ .HostName }}{{if .Root }} ⚡{{end}}</u></b>",
+          "type": "session"
+        },
+        {
+          "type": "text",
+          "style": "diamond",
+          "leading_diamond": "<#7c7c7c> | </>",
+          "foreground": "#ecf028",
+          "template": "{{ if ne \"1\" .Env.SHLVL }}(🐚 {{.Env.SHLVL}}){{ end }}"
+        }
+      ],
+      "type": "prompt"
+    },
+    {
+      "alignment": "right",
+      "segments": [
+        {
+          "foreground": "#b62424",
+          "properties": {
+            "threshold": 100
+          },
+          "style": "diamond",
+          "trailing_diamond": "<#7c7c7c> | </>",
+          "template": "took \uf252 {{ .FormattedMs }}",
+          "type": "executiontime"
+        },
+        {
+          "background": "#6CA35E",
+          "foreground": "#ffffff",
+          "trailing_diamond": "<#7c7c7c>|</>",
+          "style": "diamond",
+          "template": "\ue718{{ .Full }}",
+          "type": "node"
+        },
+        {
+          "background": "#4c1f5e",
+          "foreground": "#ffffff",
+          "trailing_diamond": "<#7c7c7c>|</>",
+          "style": "diamond",
+          "template": "\ue738{{ .Full }}",
+          "type": "java"
+        },
+        {
+          //"background": "#4c1f5e",
+          "foreground": "#56d2d3",
+          "trailing_diamond": "<#7c7c7c>|</>",
+          "style": "diamond",
+          "template": "\ue738{{ .Full }}",
+          "type": "go"
+        },
+        {
+          "type": "aws",
+          "style": "diamond",
+          "trailing_diamond": "<#7c7c7c>|</>",
+          "foreground": "#FFA400",
+          "template": "<i>\u2601{{.Profile}}{{if .Region}}@{{.Region}}{{end}}"
+        },
+        // {
+        //   "type": "ipify",
+        //   "style": "diamond",
+        //   "foreground": "#3cadd3",
+        //   //"background": "#c386f1",
+        //   "trailing_diamond": "<#7c7c7c> | </>",
+        //   "template": "{{ .IP }}",
+        //   "properties": {
+        //     "cache_timeout": 5,
+        //     "http_timeout": 1000
+        //   }
+        // },
+        {
+          "type": "battery",
+          "style": "plain",
+          "leading_diamond": "<#7c7c7c> | </>",
+          //"foreground": "#193549",
+          "foreground": "#ffeb3b",
+          "foreground_templates": [
+            "{{if eq \"Charging\" .State.String}}#40c4ff{{end}}",
+            "{{if eq \"Discharging\" .State.String}}#ff7944{{end}}",
+            "{{if eq \"Full\" .State.String}}#4caf50{{end}}"
+          ],
+          "template": "{{ if not .Error }}{{ .Percentage }} {{ .Icon }}{{ end }}",
+          "properties": {
+            "discharging_icon": "\uF58C",
+            "charging_icon": "\uF58F",
+            "charged_icon": "\uF58E",
+            "not_charging_icon": "\uF590"
+          }
+        }
+      ],
+      "type": "prompt",
+      "filler": "<#4a4a6c>▔</>"
+    },
+    {
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "foreground": "#74c93d",
+          "foreground_templates": [
+            "{{ if and (gt .Ahead 0) (gt .Behind 0) }}#FFCC80{{ end }}",
+            "{{ if gt .Ahead 0 }}#16c60c{{ end }}",
+            "{{ if gt .Behind 0 }}#f450de{{ end }}"
+          ],
+          "properties": {
+            "fetch_status": true,
+            "fetch_upstream_icon": true,
+            "branch_icon": "\uF126 ",
+            "github_icon": "\uF113 "
+          },
+          "style": "diamond",
+          "trailing_diamond": "<#7c7c7c> | </>",
+          "template": "{{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }}{{ if gt .StashCount 0 }} \ueb4b {{ .StashCount }}{{ end }}",
+          "type": "git"
+        },
+        {
+          "foreground": "#77E4F7",
+          "foreground_templates": ["{{if .Root }}#ff5f5f{{end}}"],
+          "properties": {
+            "style": "full"
+          },
+          "style": "plain",
+          "template": "\uF115 {{ .Path }}{{.Env.SLASH}}",
+          "type": "path"
+        }
+      ],
+      "type": "prompt"
+    },
+    {
+      "alignment": "right",
+      "newline": false,
+      "segments": [
+        {
+          "properties": {
+            "always_enabled": true
+          },
+          "style": "plain",
+          "template": " {{ if gt .Code 0 }}<#ff0000>{{.Code}} \uf00d</>{{ else }}<#23d18b>\uf42e</>{{ end }}",
+          "type": "status"
+        },
+        {
+          "foreground": "#6288d2",
+          "properties": {
+            "time_format": "Jan 02 03:04:05 PM"
+          },
+          "leading_diamond": "<#7c7c7c> | </>",
+          "style": "diamond",
+          "template": "{{ .CurrentDate | date .Format }} \uf017",
+          "type": "time"
+        }
+      ],
+      "type": "rprompt"
+    }
+  ],
+  "version": 2
+}
