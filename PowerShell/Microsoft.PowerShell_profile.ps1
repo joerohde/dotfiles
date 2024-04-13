@@ -43,6 +43,10 @@ Set-PSReadlineKeyHandler -Key Alt+LeftArrow -Function BackwardWord
 Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function ForwardWord
 Set-PSReadlineKeyHandler -Key Alt+RightArrow -Function ForwardWord
 
+Set-PSReadlineKeyHandler -Key Alt+z -Function Undo
+Set-PSReadlineKeyHandler -Key Ctrl+z -Function Undo
+
+
 function cd_back() {
     Set-Location - ; [ReadLine]::InvokePrompt()
 }
@@ -97,6 +101,38 @@ function cd_down() {
         )
         Set-Location "$path"
     }
+
+    # when there are 0 or 1 subdirectory when the keyhandler is first entered, just
+    # do the work and get out so the prompt does not flicker or delay.
+    function short_circuited() {
+        [OutputType([bool])]
+        # Some weird logic
+        # use the .net enumeration directly so we can generate a result quickly
+        # without needing to load every dirent in large directories.
+        # Select first 2 so we have a count Don't bother with measure-object
+        # Select first 1 to get the name of the 1st file
+        $count = 0
+        (Get-Item -Path ".").EnumerateDirectories() | ForEach-Object {
+            $count += 1
+            $_.FullName
+        } | Select-Object -First 2
+        | Select-Object -First 1 -Wait | New-Variable -name subdir -scope local
+
+        switch ($count) {
+            0 { return $true }
+            1 {
+                Set-Location $subdir
+                [ReadLine]::InvokePrompt()
+                return $true
+            }
+        }
+        return $false
+    }
+
+    if (short_circuited -eq $true) {
+        return
+    }
+
     try {
         $line = $cursor = $new_dir = $null
         $cd_cmd = '🐚 '
@@ -109,10 +145,10 @@ function cd_down() {
             [ReadLine]::MenuComplete()
             [ReadLine]::GetBufferState([ref]$post_menu, [ref]$null)
             $menu_item = $post_menu.Substring($cd_cmd.Length)
-            if ($menu_item.Length -eq 0 -or $menu_item -eq $cancel) {
-                return;
+            if ( $menu_item -eq $cancel) {
+                return
             }
-            elseif ($menu_item -eq $ok) {
+            elseif ($menu_item.Length -eq 0 -or $menu_item -eq $ok) {
                 break
             }
         } while ($post_menu -ne $pre_menu)
@@ -169,16 +205,21 @@ Remove-Item -force -ErrorAction Ignore alias:ls
 function ls { Get-ChildItem $args | Format-Wide -AutoSize }
 function which { Get-Command $args -all }
 
-function New-DriveAlias([string] $Name, [string] $Root) {
+function New-DriveAlias([string] $Name, [string] $Root, [string] $Scope = 1) {
+    if ($null -ne $Scope -as [int]) {
+        $Scope = [int]$Scope + 1 # add in this fn's scope
+    }
     if (-not $(Test-Path -PathType Container -Path $Root)) {
         return
     }
     Remove-PSDrive -Force -Name $Name -ErrorAction Ignore
-    New-PSDrive -Scope 1  -Name $Name -PSProvider FileSystem -Root $Root # | Out-Null
+    New-PSDrive -Scope $Scope -Name $Name -PSProvider FileSystem -Root $Root # | Out-Null
 }
 
-New-DriveAlias -Name Mega -Root ~\MegaSync\
-New-DriveAlias -Name Down -Root ~\Downloads\
+(& {
+    New-DriveAlias -Name Mega -Scope 1 -Root ~\MegaSync\
+    New-DriveAlias -Name Down -Scope 1 -Root ~\Downloads\
+}) | ForEach-Object { "$($_.Name): => $($_.Root)" }
 
 # get rid of inverse video directories
 $PSStyle.FileInfo.Directory = "`e[34m"
@@ -188,15 +229,118 @@ if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
     Update-FormatData -PrependPath "$((Get-ChildItem $Profile).DirectoryName)/pwsh_formatting.ps1xml"
 }
 
-function Expand-DriveAlias([string] $Path) {
-    # TODO: WIP
-    $result = ${env:CommonProgramFiles(x86)}
-    $device = (split-path -ErrorAction Ignore -Qualifier "$Path")?.TrimEnd(":")
-    if ($device.Length -eq 0) {
-        return $result
+# Resolve/Expand paths that aren't understood by Win32
+function Expand-DriveAlias {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory, Position = 0, ValueFromPipeline)]
+        [string]$Path
+    )
+
+    begin {
+        $result = {} | Select-Object -Property ExpandedName, OriginalName
+        $result.OriginalName = $Path
+        $result.ExpandedName = $Path
     }
-    #$result.ExpandedPath = $device
-    #$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("S")
+
+    process {
+        $ErrorActionPreference = 'Stop'
+        try {
+            $device = (Split-Path -ErrorAction Ignore -Qualifier "$Path")?.TrimEnd(":")
+            if ($device.Length -eq 0) {
+                return # No qualifier
+            }
+
+            $psdrive = Get-PSDrive -Name "$device"
+            $ps_rootdrive = ($psdrive.Root)?.TrimEnd(":")
+            $psprovider = $psdrive.Provider
+
+            if ($ps_rootdrive -eq $device) {
+                return # The drive is the drive. i.e.: c:\foo\bar as opposed to aliasDrive:\baz
+            }
+
+            # If we are here we want the mapping. We didn't want it earlier because
+            # if the cwd of c: is c:\foo, and $path is c:boo, we don't want to convert it
+            # to c:\foo\boo since win32 handles c:boo just fine already
+            $resolved = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path, [ref]$psprovider, [ref]$psdrive)
+            if ($resolved.Length -gt 0) {
+                $result.ExpandedName = $resolved
+            }
+        }
+        catch {
+            if (-not $_.FullyQualifiedErrorId.StartsWith("GetLocationNoMatchingDrive")) {
+                $src = $_.InvocationInfo
+                Write-Error "$(Split-Path -Leaf $src.ScriptName):$($src.ScriptLineNumber)`n$($_.FullyQualifiedErrorId): $_"
+            }
+        }
+    }
+
+    end { $result }
 }
 
-Expand-DriveAlias -Path Mega:\backup\PowerShell
+function extended_tab() {
+    begin {
+        $commit = $false
+        $line = $cursor = $null
+        [ReadLine]::GetBufferState([ref]$line, [ref]$cursor)
+        $trimmed = $line.TrimEnd()
+    }
+
+    process {
+        # Only expand at end of line
+        if ($cursor -ne $trimmed.Length) {
+            return
+        }
+        # attempt the expansion
+        $tokens = $null
+        [ReadLine]::GetBufferState([ref] $null, [ref] $tokens, [ref]$null, [ref]$null)
+        $last_text = $start_pos = $length = $null
+        $command = $null
+        $CommandFlag = [Management.Automation.Language.TokenFlags]::CommandName
+
+        #Wait-Debugger
+
+        foreach ($token in $tokens[$tokens.Length..0]) {
+            # backwards
+            if ($null -eq $last_text -and $token.Text.Length -gt 0) {
+                $last_text = $token.Text
+                $start_pos = $token.Extent.StartOffset
+                $length = $token.Extent.EndOffset - $start_pos
+            }
+            elseif ($token.TokenFlags.HasFlag($CommandFlag)) {
+                $command = $token.Text
+                break
+            }
+
+            if ($Token.HasError -eq $true) {
+                return
+            }
+        }
+
+        # If command or last_text are empty, bail
+        if ($last_text.Length -eq 0 -or $command.Length -eq 0) {
+            return
+        }
+
+        # If the command is not an Application, bail (only external apps need Win32 paths)
+        if ((Get-Command -Name "$command" -ErrorAction Ignore)?.CommandType -ne "Application") {
+            return
+        }
+
+        # comes back the same if no win32 drive expansion
+        $replacement = (Expand-DriveAlias -Path $last_text).ExpandedName
+        if ($replacement -eq $last_text) {
+            return
+        }
+        $commit = $true
+    }
+
+    end {
+        if ($commit -eq $true) {
+            [readline]::Replace($start_pos, $length, $replacement)
+        }
+        [ReadLine]::MenuComplete()
+    }
+}
+
+Set-PSReadlineKeyHandler -Key Tab -ScriptBlock { extended_tab }
