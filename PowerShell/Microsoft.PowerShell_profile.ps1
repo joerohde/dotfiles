@@ -1,5 +1,12 @@
 using namespace System.Collections.Generic
 
+$IsAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($True -eq $IsAdmin) {
+    Write-Host "Removing Admin priviledge"
+    gsudo -i Medium
+    Stop-Process -Force -Id $PID
+}
+
 $TypeAlias = [PowerShell].Assembly.GetType("System.Management.Automation.TypeAccelerators")
 $TypeAlias::Add("accelerators", $TypeAlias)
 $TypeAlias::Add("TypeAlias", [accelerators])
@@ -10,7 +17,10 @@ $TypeAlias::Add("TypeAlias", [accelerators])
 
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 Import-Module posh-git
-Import-Module FormatTools
+# don't really need these loaded and kind of slow
+#Import-Module FormatTools
+#Import-Module PackageManagement
+#Import-Module PoshFunctions
 
 Set-PSReadLineOption `
     -EditMode Emacs `
@@ -31,21 +41,6 @@ $Env:ARCH = switch ($os) { 'win' { $Env:PROCESSOR_ARCHITECTURE } default { $(arc
 oh-my-posh completion powershell | Out-String | Invoke-Expression
 & oh-my-posh --config "$PSScriptRoot\joe.omp.json" init pwsh | Invoke-Expression
 $env:POSH_GIT_ENABLED = $true
-
-Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-Set-PSReadlineKeyHandler -Key UpArrow -Function HistorySearchBackward
-Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
-Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardDeleteWord
-Set-PSReadlineKeyHandler -Chord "Escape,Escape" -Function DeleteLine
-
-Set-PSReadlineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord
-Set-PSReadlineKeyHandler -Key Alt+LeftArrow -Function BackwardWord
-Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function ForwardWord
-Set-PSReadlineKeyHandler -Key Alt+RightArrow -Function ForwardWord
-
-Set-PSReadlineKeyHandler -Key Alt+z -Function Undo
-Set-PSReadlineKeyHandler -Key Ctrl+z -Function Undo
-
 
 function cd_back() {
     Set-Location - ; [ReadLine]::InvokePrompt()
@@ -172,39 +167,6 @@ function cd_down() {
     }
 }
 
-Set-PSReadlineKeyHandler -Key Shift-LeftArrow -ScriptBlock { cd_back }
-Set-PSReadlineKeyHandler -Key Shift-RightArrow -ScriptBlock { cd_forward }
-Set-PSReadlineKeyHandler -Key Shift-UpArrow -ScriptBlock { cd_up }
-Set-PSReadlineKeyHandler -Key Shift-DownArrow -ScriptBlock { cd_down }
-
-$process_name = (Get-Process -PID $PID).Name
-$parent_process = (Get-Process -PID $PID).Parent
-$Env:SHLVL = 1
-while ($null -ne $parent_process) {
-    if ($parent_process.Name -ne $process_name) {
-        break
-    }
-    $Env:SHLVL = [int]$Env:SHLVL + 1
-    $parent_process = $parent_process.Parent
-}
-
-function Set-PoshInfo {
-    # any extra work can go here
-}
-New-Alias -Name 'Set-PoshContext' -Value 'Set-PoshInfo' -Scope Global -Force
-
-
-$env:PAGER = "bat.exe -p"
-$env:LESS = '-X -i -M -s -S -x4 -j2 -R'
-
-New-Alias -Force -Name more -Value bat
-New-Alias -Force -Name less -Value bat
-New-Alias -Force -Name d -Value Get-ChildItem
-
-Remove-Item -force -ErrorAction Ignore alias:ls
-function ls { Get-ChildItem $args | Format-Wide -AutoSize }
-function which { Get-Command $args -all }
-
 function New-DriveAlias([string] $Name, [string] $Root, [string] $Scope = 1) {
     if ($null -ne $Scope -as [int]) {
         $Scope = [int]$Scope + 1 # add in this fn's scope
@@ -214,19 +176,6 @@ function New-DriveAlias([string] $Name, [string] $Root, [string] $Scope = 1) {
     }
     Remove-PSDrive -Force -Name $Name -ErrorAction Ignore
     New-PSDrive -Scope $Scope -Name $Name -PSProvider FileSystem -Root $Root # | Out-Null
-}
-
-(& {
-    New-DriveAlias -Name Mega -Scope 1 -Root ~\MegaSync\
-    New-DriveAlias -Name Down -Scope 1 -Root ~\Downloads\
-}) | ForEach-Object { "$($_.Name): => $($_.Root)" }
-
-# get rid of inverse video directories
-$PSStyle.FileInfo.Directory = "`e[34m"
-
-# hack to change default color outputs
-if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
-    Update-FormatData -PrependPath "$((Get-ChildItem $Profile).DirectoryName)/pwsh_formatting.ps1xml"
 }
 
 # Resolve/Expand paths that aren't understood by Win32
@@ -343,4 +292,68 @@ function extended_tab() {
     }
 }
 
-Set-PSReadlineKeyHandler -Key Tab -ScriptBlock { extended_tab }
+
+
+function Set-PoshInfo {
+    # any extra work can go here
+}
+New-Alias -Name 'Set-PoshContext' -Value 'Set-PoshInfo' -Scope Global -Force
+New-Alias -Force -Name more -Value bat
+New-Alias -Force -Name less -Value bat
+New-Alias -Force -Name d -Value Get-ChildItem
+New-Alias -Force -Name es -Value C:\win32app\TakeCommand\es.exe
+
+Set-PSReadlineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
+Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardDeleteWord
+Set-PSReadlineKeyHandler -Chord "Escape,Escape" -Function DeleteLine
+
+Set-PSReadlineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord
+Set-PSReadlineKeyHandler -Key Alt+LeftArrow -Function BackwardWord
+Set-PSReadlineKeyHandler -Key Ctrl+RightArrow -Function ForwardWord
+Set-PSReadlineKeyHandler -Key Alt+RightArrow -Function ForwardWord
+
+Set-PSReadlineKeyHandler -Key Alt+z -Function Undo
+Set-PSReadlineKeyHandler -Key Ctrl+z -Function Undo
+
+Set-PSReadlineKeyHandler -Key Shift-LeftArrow -ScriptBlock { cd_back }
+Set-PSReadlineKeyHandler -Key Shift-RightArrow -ScriptBlock { cd_forward }
+Set-PSReadlineKeyHandler -Key Shift-UpArrow -ScriptBlock { cd_up }
+Set-PSReadlineKeyHandler -Key Shift-DownArrow -ScriptBlock { cd_down }
+
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+Set-PSReadlineKeyHandler -Key Ctrl+Spacebar -ScriptBlock { extended_tab }
+
+$process_name = (Get-Process -PID $PID).Name
+$parent_process = (Get-Process -PID $PID).Parent
+$Env:SHLVL = 1
+while ($null -ne $parent_process) {
+    if ($parent_process.Name -ne $process_name) {
+        break
+    }
+    $Env:SHLVL = [int]$Env:SHLVL + 1
+    $parent_process = $parent_process.Parent
+}
+
+$env:PAGER = "bat.exe -p"
+$env:LESS = '-X -i -M -s -S -x4 -j2 -R'
+
+
+Remove-Item -force -ErrorAction Ignore alias:ls
+function ls { Get-ChildItem $args | Format-Wide -AutoSize }
+function which { Get-Command $args -all }
+function psport { Get-Process -Id (Get-NetTCPConnection -LocalPort $Args).OwningProcess }
+
+(& {
+    New-DriveAlias -Name Mega -Scope 1 -Root ~\MegaSync\
+    New-DriveAlias -Name Down -Scope 1 -Root ~\Downloads\
+    New-DriveAlias -Name Src  -Scope 1 -Root ~\Source\
+}) | ForEach-Object { "$($_.Name): => $($_.Root)" }
+
+# get rid of inverse video directories
+$PSStyle.FileInfo.Directory = "`e[34m"
+
+# hack to change default color outputs
+if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
+    Update-FormatData -PrependPath "$((Get-ChildItem $Profile).DirectoryName)/pwsh_formatting.ps1xml"
+}
