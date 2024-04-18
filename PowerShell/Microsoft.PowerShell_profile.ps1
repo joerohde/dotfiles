@@ -1,21 +1,72 @@
 using namespace System.Collections.Generic
-
-$IsAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if ($True -eq $IsAdmin) {
-    Write-Host "Removing Admin priviledge"
-    gsudo -i Medium
-    Stop-Process -Force -Id $PID
-}
-
 $TypeAlias = [PowerShell].Assembly.GetType("System.Management.Automation.TypeAccelerators")
 $TypeAlias::Add("accelerators", $TypeAlias)
 $TypeAlias::Add("TypeAlias", [accelerators])
 
-[TypeAlias]::Add("ReadLine", [Microsoft.PowerShell.PSConsoleReadLine])
 [TypeAlias]::Add("CompletionResult", [System.Management.Automation.CompletionResult])
 [TypeAlias]::Add("CompletionResultType", [System.Management.Automation.CompletionResultType])
+$HasReadline = $True
+try {
+    $ErrorActionPreference = 'SilentlyContinue'
+    [TypeAlias]::Add("ReadLine", [Microsoft.PowerShell.PSConsoleReadLine])
+}
+catch { $HasReadline = $False }
 
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
+
+# Waits until there are no keys down, waits for a key-down,
+# holds until there is a key-up.
+function Get-Key {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0, ValueFromPipeline)]
+        [int]$Delay = 5,
+
+        [Parameter(Position = 1, ValueFromPipeline)]
+        [string]$Prompt = "Waiting %% seconds..."
+    )
+
+    begin {
+        $milliseconds = [int]$Delay * 1000
+        $result = {} | Select-Object -Property KeyInfo
+        $result.KeyInfo = $null
+    }
+    process {
+        $host.UI.RawUI.FlushInputBuffer()
+        While ( (0 -lt $milliseconds)) {
+            if ($host.UI.RawUI.KeyAvailable) {
+                $keyinfo = $host.UI.RawUI.ReadKey(0xF)
+                if ($keyinfo.KeyDown) {
+                    $result.KeyInfo = $keyinfo
+                    while ($host.UI.RawUI.ReadKey(0xF).KeyDown) {
+                        $true
+                    }
+                    break
+                }
+            }
+            $out = $prompt -Replace "%%", [int]($milliseconds / 1000)
+            Write-Host "`r$out" -NoNewline
+            Start-Sleep -Milliseconds 100
+            $milliseconds = $milliseconds - 100
+        }
+    }
+    end {
+        $result
+    }
+}
+
+$IsAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($IsAdmin) {
+    if (!$HasReadline -or $null -eq (Get-Key -Delay 3 -Prompt "Removing Admin priviledge in %% seconds...Press a key to retain...")) {
+        Write-Host "`nLowering Admin Elevation..."
+        gsudo -i Medium
+        Stop-Process -Force -Id $PID
+    }
+    else {
+        Write-Host "`nWarning: Root access retained."
+    }
+}
+
 Import-Module posh-git
 # don't really need these loaded and kind of slow
 #Import-Module FormatTools
@@ -227,23 +278,19 @@ function Expand-DriveAlias {
     end { $result }
 }
 
-function extended_tab() {
+# If the cursor is on/in a
+function expand_virtual_drives([string] $NextCommand) {
     begin {
         $commit = $false
         $line = $cursor = $null
         [ReadLine]::GetBufferState([ref]$line, [ref]$cursor)
-        $trimmed = $line.TrimEnd()
     }
 
     process {
-        # Only expand at end of line
-        if ($cursor -ne $trimmed.Length) {
-            return
-        }
         # attempt the expansion
         $tokens = $null
         [ReadLine]::GetBufferState([ref] $null, [ref] $tokens, [ref]$null, [ref]$null)
-        $last_text = $start_pos = $length = $null
+        $target_path = $start_pos = $length = $null
         $command = $null
         $CommandFlag = [Management.Automation.Language.TokenFlags]::CommandName
 
@@ -251,23 +298,27 @@ function extended_tab() {
 
         foreach ($token in $tokens[$tokens.Length..0]) {
             # backwards
-            if ($null -eq $last_text -and $token.Text.Length -gt 0) {
-                $last_text = $token.Text
-                $start_pos = $token.Extent.StartOffset
-                $length = $token.Extent.EndOffset - $start_pos
-            }
-            elseif ($token.TokenFlags.HasFlag($CommandFlag)) {
-                $command = $token.Text
-                break
-            }
-
             if ($Token.HasError -eq $true) {
                 return
+            }
+            if ($token.Text.Length -eq 0) {
+                continue
+            }
+            $extent = $token.Extent
+            if ($cursor -in $extent.StartOffset..$extent.EndOffset) {
+                $start_pos = $extent.StartOffset
+                $length = $extent.EndOffset - $start_pos
+                $target_path = $token.Text
+            }
+
+            elseif ($token.TokenFlags.HasFlag($CommandFlag) -and $target_path.Length -gt 0) {
+                $command = $token.Text
+                break
             }
         }
 
         # If command or last_text are empty, bail
-        if ($last_text.Length -eq 0 -or $command.Length -eq 0) {
+        if ($target_path.Length -eq 0 -or $command.Length -eq 0) {
             return
         }
 
@@ -277,8 +328,8 @@ function extended_tab() {
         }
 
         # comes back the same if no win32 drive expansion
-        $replacement = (Expand-DriveAlias -Path $last_text).ExpandedName
-        if ($replacement -eq $last_text) {
+        $replacement = (Expand-DriveAlias -Path $target_path).ExpandedName
+        if ($replacement -eq $target_path) {
             return
         }
         $commit = $true
@@ -288,7 +339,10 @@ function extended_tab() {
         if ($commit -eq $true) {
             [readline]::Replace($start_pos, $length, $replacement)
         }
-        [ReadLine]::MenuComplete()
+        elseif ($NextCommand.Length -gt 0) {
+            #[ReadLine]::MenuComplete()
+            [ReadLine]::$NextCommand()
+        }
     }
 }
 
@@ -321,8 +375,8 @@ Set-PSReadlineKeyHandler -Key Shift-RightArrow -ScriptBlock { cd_forward }
 Set-PSReadlineKeyHandler -Key Shift-UpArrow -ScriptBlock { cd_up }
 Set-PSReadlineKeyHandler -Key Shift-DownArrow -ScriptBlock { cd_down }
 
-Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
-Set-PSReadlineKeyHandler -Key Ctrl+Spacebar -ScriptBlock { extended_tab }
+Set-PSReadlineKeyHandler -Key Tab -ScriptBlock { expand_virtual_drives "MenuComplete" } # Menu-Complete
+Set-PSReadlineKeyHandler -Key Ctrl+Spacebar -ScriptBlock { expand_virtual_drives "Complete" }
 
 $process_name = (Get-Process -PID $PID).Name
 $parent_process = (Get-Process -PID $PID).Parent
@@ -341,7 +395,7 @@ $env:LESS = '-X -i -M -s -S -x4 -j2 -R'
 
 Remove-Item -force -ErrorAction Ignore alias:ls
 function ls { Get-ChildItem $args | Format-Wide -AutoSize }
-function which { Get-Command $args -all }
+function which { Get-Command $args -all -ErrorAction SilentlyContinue }
 function psport { Get-Process -Id (Get-NetTCPConnection -LocalPort $Args).OwningProcess }
 
 (& {
