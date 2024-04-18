@@ -10,6 +10,7 @@ $BASEDIR = $(Resolve-Path "$PSScriptRoot/..")
 $Env:ProfileRoot = $(Split-Path $Profile)
 
 Set-Location $BASEDIR
+git fetch && & { git rebase || git rebase --abort; }
 git -C $DOTBOT_DIR submodule sync --quiet --recursive
 git submodule update --init --recursive $DOTBOT_DIR
 
