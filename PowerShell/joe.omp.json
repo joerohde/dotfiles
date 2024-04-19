@@ -1,7 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
-  //"transient_prompt": { "template": "BOo" },
+  "transient_prompt": {
+    "foreground": "#ecf028",
+    "foreground_templates": ["<o>"],
+    "background_templates": [""],
+
+    "template": "\udb85\udfa1{{.Segments.Shell.Name}}{{if .Root}}<,#ff0f0f><b>{{end}}{{if .Segments.Session.SSHSession}}<u>ˢˢʰ{{end}}{{if .Root }} ⚡{{end}}</u></b><,transparent> <#7298e2>{{ .Segments.Time.CurrentDate | date .Segments.Time.Format }} {{if .Segments.Git }}<#74c93d>{{.Segments.Git.HEAD}} {{end}}<#56d2d3>{{.Segments.Path.Path}}/"
+  },
   "console_title_template": "{{ .Shell }} in {{ .Folder }}",
+
   "blocks": [
     {
       "alignment": "left",
@@ -157,7 +164,7 @@
             "style": "full"
           },
           "style": "plain",
-          "template": "\uF115 {{ .Path }}{{.Env.SLASH}}",
+          "template": "{{$Blah := \"foobar\"}}\uF115 {{ .Path }}{{.Env.SLASH}}",
           "type": "path"
         }
       ],
