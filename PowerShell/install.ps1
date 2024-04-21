@@ -103,5 +103,6 @@ switch ($os) {
 Install-MissingModule -Name PackageManagement
 Install-MissingModule -Name posh-git
 Install-MissingModule -Name FormatTools
+Install-MissingModule -Name DirColors
 $options = @{ MaximumVersion = '2.2.10' }; Install-MissingModule -Name PoshFunctions $options
 . $Profile

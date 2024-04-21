@@ -4,8 +4,8 @@
       glob: true
       force: true
 
-- shell:
-  - echo Updating dot files...
+# - shell:
+#   - echo Updating dot files...
 
 - link:
     # regular Powershell files
@@ -25,6 +25,7 @@
     ~/.gitignore_global:
     # ~/.LESS_TERMCAP:
     ~/.lesskey:
+    ~/.dircolors:
 
     # directories
     ~/.emacs.d:

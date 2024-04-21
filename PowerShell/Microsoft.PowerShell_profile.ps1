@@ -70,12 +70,6 @@ if ($IsAdmin) {
     }
 }
 
-# don't really need these on newer powershells
-#Import-Module posh-git
-#Import-Module FormatTools
-#Import-Module PackageManagement
-#Import-Module PoshFunctions
-
 Set-PSReadLineOption `
     -EditMode Emacs `
     -BellStyle Visual `
@@ -351,7 +345,12 @@ function expand_virtual_drives([string] $NextCommand) {
 function Set-PoshInfo {
     # any extra work can go here
 }
-function Append-ToSessionPath([string]$Directory) {
+function Append-ToSessionPath() {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline)]
+        [string]$Directory
+    )
     $PathList = ($Env:Path).Split(";")
     if ($Directory -NotIn $PathList) {
         $PathList = $PathList + $Directory
@@ -359,7 +358,13 @@ function Append-ToSessionPath([string]$Directory) {
     }
 }
 
-function Prepend-ToSessionPath([string]$Directory) {
+function Prepend-ToSessionPath() {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline)]
+        [string]$Directory
+    )
+
     $PathList = ($Env:Path).Split(";")
     if ($Directory -NotIn $PathList) {
         $PathList = $Directory + $PathList
@@ -375,7 +380,7 @@ function Restart-Shell() {
     Stop-Process -Id $PID -Force
 }
 
-Append-ToSessionPath Join-Path("$PSScriptRoot", "Scripts")
+Join-Path "$PSScriptRoot" "Scripts" | Append-ToSessionPath
 
 New-Alias -Name 'Set-PoshContext' -Value 'Set-PoshInfo' -Scope Global -Force
 New-Alias -Force -Name more -Value bat
@@ -435,5 +440,7 @@ $PSStyle.FileInfo.Directory = "`e[34m"
 
 # hack to change default color outputs
 if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
-    Update-FormatData -PrependPath "$((Get-ChildItem $Profile).DirectoryName)/pwsh_formatting.ps1xml"
+    Update-FormatData -PrependPath "$PSScriptRoot/pwsh_formatting.ps1xml"
 }
+
+Update-DirColors ~/.dircolors

@@ -7,6 +7,7 @@ function Remove-PathRegistryDuplicates {
     )
 
     begin {
+        $ErrorActionPreference = 'Inquire'
         $result = {} | Select-Object -Property OriginalMachinePath, OriginalUserPath, UpdatedMachinePath, UpdatedUserPath
 
         $raw_machine_path = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
@@ -86,10 +87,10 @@ function Remove-PathRegistryDuplicates {
                 else {
                     if (-Not $NoBackup) {
                         [Environment]::SetEnvironmentVariable("Path.Backup", $raw_machine_path,
-                            [EnvironmentVariableTarget]::User)
+                            [EnvironmentVariableTarget]::Machine)
                     }
 
-                    [Environment]::SetEnvironmentVariable("Path2", $new_machine,
+                    [Environment]::SetEnvironmentVariable("Path", $new_machine,
                         [EnvironmentVariableTarget]::Machine)
                     $result.UpdatedMachinePath = $new_machine
                 }
