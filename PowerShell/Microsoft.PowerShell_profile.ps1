@@ -1,4 +1,7 @@
 using namespace System.Collections.Generic
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', $null, Scope = 'Function', Target = '*pend-ToSessionPath')]
+param()
+
 $TypeAlias = [PowerShell].Assembly.GetType("System.Management.Automation.TypeAccelerators")
 $TypeAlias::Add("accelerators", $TypeAlias)
 $TypeAlias::Add("TypeAlias", [accelerators])
@@ -67,8 +70,8 @@ if ($IsAdmin) {
     }
 }
 
-Import-Module posh-git
-# don't really need these loaded and kind of slow
+# don't really need these on newer powershells
+#Import-Module posh-git
 #Import-Module FormatTools
 #Import-Module PackageManagement
 #Import-Module PoshFunctions
@@ -85,7 +88,6 @@ $os = $IsWindows ? 'win' : $IsMacOS ? 'mac' : 'nix'
 $slash = [IO.Path]::DirectorySeparatorChar
 $Env:SLASH = $slash
 $Env:ARCH = switch ($os) { 'win' { $Env:PROCESSOR_ARCHITECTURE } default { $(arch) } }
-
 
 # Do this after radline options. Transient prompt binds Enter key, but 'EditMode emacs' will overwrite/set it also.
 #& $Env:LOCALAPPDATA\Programs\oh-my-posh\bin\oh-my-posh --config "$PSScriptRoot\joe.omp.json" init pwsh | Invoke-Expression
@@ -346,11 +348,35 @@ function expand_virtual_drives([string] $NextCommand) {
     }
 }
 
-
-
 function Set-PoshInfo {
     # any extra work can go here
 }
+function Append-ToSessionPath([string]$Directory) {
+    $PathList = ($Env:Path).Split(";")
+    if ($Directory -NotIn $PathList) {
+        $PathList = $PathList + $Directory
+        $Env:Path = $PathList -join ";"
+    }
+}
+
+function Prepend-ToSessionPath([string]$Directory) {
+    $PathList = ($Env:Path).Split(";")
+    if ($Directory -NotIn $PathList) {
+        $PathList = $Directory + $PathList
+        $Env:Path = $PathList -join ";"
+    }
+}
+
+function Update() {
+    ~/MegaSync/dotfiles/PowerShell/install.ps1
+}
+function Restart-Shell() {
+    Start-Process -NoNewWindow (Get-Process -PID $PID).Path
+    Stop-Process -Id $PID -Force
+}
+
+Append-ToSessionPath Join-Path("$PSScriptRoot", "Scripts")
+
 New-Alias -Name 'Set-PoshContext' -Value 'Set-PoshInfo' -Scope Global -Force
 New-Alias -Force -Name more -Value bat
 New-Alias -Force -Name less -Value bat

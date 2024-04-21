@@ -12,7 +12,7 @@
     $ProfileRoot:
       create: true
       prefix: ''
-      path: PowerShell/*
+      path: PowerShell/**
       exclude: [
         PowerShell/.vscode,
         PowerShell/install.ps1,
