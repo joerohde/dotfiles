@@ -9,11 +9,14 @@ $TypeAlias::Add("TypeAlias", [accelerators])
 [TypeAlias]::Add("CompletionResult", [System.Management.Automation.CompletionResult])
 [TypeAlias]::Add("CompletionResultType", [System.Management.Automation.CompletionResultType])
 $HasReadline = $True
-try {
+& {
+     try {
     $ErrorActionPreference = 'SilentlyContinue'
     [TypeAlias]::Add("ReadLine", [Microsoft.PowerShell.PSConsoleReadLine])
 }
-catch { $HasReadline = $False }
+catch { $script:HasReadline = $False }
+}
+
 
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
@@ -214,7 +217,7 @@ function cd_down() {
     }
 }
 
-function New-DriveAlias([string] $Name, [string] $Root, [string] $Scope = 1) {
+function New-DriveAlias([string] $Name, [string] $Root, [string] $Scope = 0) {
     if ($null -ne $Scope -as [int]) {
         $Scope = [int]$Scope + 1 # add in this fn's scope
     }
