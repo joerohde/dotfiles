@@ -17,11 +17,14 @@ $HasReadline = $True
 catch { $script:HasReadline = $False }
 }
 
-
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
+
+class ConvertToWin32Path : Attribute {
+}
 
 # Waits until there are no keys down, waits for a key-down,
 # holds until there is a key-up.
+
 function Get-Key {
     [CmdletBinding()]
     param (
@@ -277,6 +280,13 @@ function Expand-DriveAlias {
     end { $result }
 }
 
+function Find-CommandAttribute([Management.Automation.CommandInfo]$command, [string] $attribute ) {
+    if (${command}?.CommandType -eq "Function") {
+        $result = $command.ScriptBlock?.Attributes | Where-object { $_.TypeID.Name -eq "$attribute" }
+    }
+    return $result
+}
+
 # If the cursor is on/in a
 function expand_virtual_drives([string] $NextCommand) {
     begin {
@@ -322,7 +332,18 @@ function expand_virtual_drives([string] $NextCommand) {
         }
 
         # If the command is not an Application, bail (only external apps need Win32 paths)
-        if ((Get-Command -Name "$command" -ErrorAction Ignore)?.CommandType -ne "Application") {
+        $cmd_object = (Get-Command -Name "$command" -ErrorAction Ignore)
+        if ($null -eq $cmd_object) {
+            return
+        }
+        $cmd_object = $cmd_object.ResolvedCommand ?? $cmd_object
+
+        # Expand if the command is an application, has the ConvertToWin32Path attributes,
+        # or is an alias to an application (recursively)
+        if (($cmd_object.CommandType -ne "Application") -and
+            $null -eq (Find-CommandAttribute $cmd_object "ConvertToWin32Path")
+        )
+        {
             return
         }
 
@@ -381,6 +402,12 @@ function Update() {
 function Restart-Shell() {
     Start-Process -NoNewWindow (Get-Process -PID $PID).Path
     Stop-Process -Id $PID -Force
+}
+
+function emacs() {
+    [ConvertToWin32Path()]
+    param()
+    &"C:\Program Files\Emacs\emacs-29.3_2\bin\emacs.exe" -nw $Args
 }
 
 Join-Path "$PSScriptRoot" "Scripts" | Append-ToSessionPath
