@@ -248,6 +248,12 @@ function Expand-DriveAlias {
     process {
         $ErrorActionPreference = 'Stop'
         try {
+            # Special case '~'
+            if (("$Path" -split "\\|/")[0] -eq "~") {
+                $result.ExpandedName = "$Path"  -replace "^~", "$env:USERPROFILE"
+                return
+            }
+
             $device = (Split-Path -ErrorAction Ignore -Qualifier "$Path")?.TrimEnd(":")
             if ($device.Length -eq 0) {
                 return # No qualifier
