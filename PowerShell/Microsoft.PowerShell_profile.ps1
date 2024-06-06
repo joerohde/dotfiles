@@ -64,15 +64,19 @@ function Get-Key {
     }
 }
 
-$IsAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if ($IsAdmin) {
-    if (!$HasReadline -or $null -eq (Get-Key -Delay 3 -Prompt "Removing Admin priviledge in %% seconds...Press a key to retain...")) {
-        Write-Host "`nLowering Admin Elevation..."
-        gsudo -i Medium
-        Stop-Process -Force -Id $PID
-    }
-    else {
-        Write-Host "`nWarning: Root access retained."
+# Only for windows which becomes root in unexpected situatuation (ssh)
+if ($PSVersionTable.Platform -like "win32*") {
+    $user = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent()))
+    $IsAdmin = $user.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if ($IsAdmin) {
+        if (!$HasReadline -or $null -eq (Get-Key -Delay 3 -Prompt "Removing Admin priviledge in %% seconds...Press a key to retain...")) {
+            Write-Host "`nLowering Admin Elevation..."
+            gsudo -i Medium
+            Stop-Process -Force -Id $PID
+        }
+        else {
+            Write-Host "`nWarning: Root access retained."
+        }
     }
 }
 
@@ -381,10 +385,10 @@ function Append-ToSessionPath() {
         [Parameter(ValueFromPipeline)]
         [string]$Directory
     )
-    $PathList = ($Env:Path).Split(";")
+    $PathList = ($env:PATH).Split(";")
     if ($Directory -NotIn $PathList) {
         $PathList = $PathList + $Directory
-        $Env:Path = $PathList -join ";"
+        $env:PATH = $PathList -join ";"
     }
 }
 
@@ -395,10 +399,10 @@ function Prepend-ToSessionPath() {
         [string]$Directory
     )
 
-    $PathList = ($Env:Path).Split(";")
+    $PathList = ($env:PATH).Split(";")
     if ($Directory -NotIn $PathList) {
         $PathList = $Directory + $PathList
-        $Env:Path = $PathList -join ";"
+        $env:PATH = $PathList -join ";"
     }
 }
 
