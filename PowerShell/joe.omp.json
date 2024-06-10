@@ -15,6 +15,30 @@
       "alignment": "left",
       "segments": [
         {
+          "foreground": "#ecf028",
+          "foreground_templates": [
+            "{{if .SSHSession }}#e275ab{{end}}",
+            "{{if .Root }}#ffffff{{end}}"
+          ],
+          "background_templates": [
+            "{{if .Root }}#ff0f0f{{end}}"
+          ],
+          "style": "diamond",
+          "trailing_diamond": "<#7c7c7c> | </>",
+          "template": "{{if .Root}}<b>{{end}}{{if .SSHSession}}<u>ˢˢʰ{{end}}{{ .UserName }}@{{ .HostName }}{{if .Root }} ⚡{{end}}</u></b>",
+          "type": "session"
+        },
+        {
+          "foreground": "#f58d31",
+          "style": "diamond",
+          "properties": {
+            "display_distro_name": true,
+            "windows": "\uE62A Windows"
+          },
+          "template": "{{.Icon}}{{ if .WSL }}/\uE62A{{ end }} {{ lower .Env.ARCH }}",
+          "type": "os"
+        },
+        {
           "type": "shell",
           "style": "plain",
           "trailing_diamond": "<#7c7c7c>|</>",
@@ -22,30 +46,9 @@
           "foreground": "#ecf028",
           "properties": {
             "mapped_shell_names": {
-              "pwsh": "\uE683"
+              "pwsh": "\uE683pwsh"
             }
           }
-        },
-        {
-          "foreground": "#f58d31",
-          "style": "diamond",
-          "trailing_diamond": "<#7c7c7c>|</>",
-          "properties": {
-            "display_distro_name": false
-          },
-          "template": "{{.Icon}}{{ if .WSL }}/\uE62A{{ end }} {{ lower .Env.ARCH }}",
-          "type": "os"
-        },
-        {
-          "foreground": "#e275ab",
-          "foreground_templates": [
-            "{{if .SSHSession }}#ecf028{{end}}",
-            "{{if .Root }}#ffffff{{end}}"
-          ],
-          "background_templates": ["{{if .Root }}#ff0f0f{{end}}"],
-          "style": "diamond",
-          "template": "{{if .Root}}<b>{{end}}{{if .SSHSession}}<u>ˢˢʰ{{end}}{{ .UserName }}@{{ .HostName }}{{if .Root }} ⚡{{end}}</u></b>",
-          "type": "session"
         },
         {
           "type": "text",

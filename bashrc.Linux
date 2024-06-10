@@ -40,7 +40,6 @@ function _funcgrep() {
 if [[ "$PWD" == "$HOME" ]]; then
 	[[ -d /mnt/c/Users/joe/ ]] && pushd /mnt/c/Users/joe/ >/dev/null || return
 	[[ -d /mnt/d/Source/ ]] && pushd /mnt/d/Source/ >/dev/null || return
-echo "FOO"
 fi
 
 append_path PATH ~/.local/bin/
