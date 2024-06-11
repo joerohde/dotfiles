@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
   "transient_prompt": {
-    "foreground": "#ecf028",
+    "foreground": "#7298e2",
     "foreground_templates": [""],
     "background_templates": [""],
 
-    "template": "<o>\udb85\udfa1{{.Segments.Shell.Name}}{{if .Root}}<,#ff0f0f><b>{{end}}{{if .Segments.Session.SSHSession}}<u>ˢˢʰ{{end}}{{if .Root }} ⚡{{end}}</u></b><,transparent> <#7298e2>{{ .Segments.Time.CurrentDate | date .Segments.Time.Format }} {{if .Segments.Git }}<#74c93d>{{.Segments.Git.HEAD}} {{end}}<#56d2d3>{{.Segments.Path.Path}}/"
+    "template": "<o>{{ .Segments.Time.CurrentDate | date .Segments.Time.Format }} <#ecf028>{{.UserName}}@{{.HostName}}{{if .Root}}<,#ff0f0f><b>{{end}}{{if .Segments.Session.SSHSession}}<u>ˢˢʰ{{end}}{{if .Root }} ⚡{{end}}</u></b><,transparent> {{if .Segments.Git }}<#74c93d>{{.Segments.Git.HEAD}} {{end}}<#56d2d3>{{.Segments.Path.Path}}{{.Env.SLASH}}"
   },
   "console_title_template": "{{ .Shell }} in {{ .Folder }}",
   "shell_integration": true,
