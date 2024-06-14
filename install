@@ -131,3 +131,4 @@ function install() {
 
 export DEBIAN_FRONTEND=noninteractive
 main "$@"
+command -v "pwsh" >/dev/null && pwsh -c update
