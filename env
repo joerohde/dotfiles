@@ -51,6 +51,9 @@ test -r ~/.bash_login.local && . ~/.bash_login.local
 [[ -d ${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin ]] &&
     PATH="$PATH:${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin"
 
-PATH="$PATH:${HOME}/go/bin"
+PATH="${HOMEBREW_PREFIX}/opt/openjdk/bin:$PATH:${HOME}/go/bin"
+export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+export JDK_HOME="/opt/homebrew/opt/openjdk"
+export JAVA_HOME="${JDK_HOME}"
 
 test -r ~/.local/etc/profile && . ~/.local/etc/profile

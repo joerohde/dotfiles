@@ -9,11 +9,20 @@ function die() {
     exit "${CODE}"
 }
 
-TARGET=$(readlink "${BASH_SOURCE%}")
-DOTFILES_DIR="${TARGET%/*}/../.."
+DOTFILES_DIR="${HOME}/MegaSync/dotfiles"
 INSTALL=$(realpath "${DOTFILES_DIR}/install")
 
-cd ${DOTFILES_DIR} || die "can't chdir: ${DOTFILES_DIR}"
+if [[ -r $INSTALL ]] && [[ ! -x $INSTALL ]]; then
+    chmod u+x "$INSTALL"
+fi
+
+if [[ ! -x $INSTALL ]]; then
+    TARGET=$(readlink "${BASH_SOURCE%}")
+    DOTFILES_DIR="${TARGET%/*}/../.."
+    INSTALL=$(realpath "${DOTFILES_DIR}/install")
+fi
+
+cd "${DOTFILES_DIR}" || die "can't chdir: ${DOTFILES_DIR}"
 
 git fetch && { git rebase || git rebase --abort; }
 
@@ -22,4 +31,4 @@ git fetch && { git rebase || git rebase --abort; }
 
 [[ -f $INSTALL ]] || die "install script not found: ${INSTALL}" 1
 [[ -x $INSTALL ]] || die "install script not executable ${INSTALL}" 1
-$INSTALL
+"$INSTALL"

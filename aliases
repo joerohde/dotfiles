@@ -16,7 +16,6 @@ alias emacs="emacs -nw"
 alias gitsub="git submodule update --recursive --init --remote"
 # shellcheck disable=SC2139 # otherwise it is recursive, wanting to pick up lscolor changes
 alias grep="${BASH_ALIASES[grep]:-grep} -E -d skip"
-alias h="history -1000"
 alias hgrep="history | grep"
 alias home="cd ~"
 alias lib="cd ~/Library"
@@ -41,3 +40,9 @@ alias v="source ~/.local/bin/v"
 alias which="command -V"
 alias x="stripansi | xargs -d '\n' "
 alias xargs="xargs "
+
+if [[ -n "$ZSH_VERSION" ]]; then
+    alias h="history -1000"
+else
+    alias h="history 1000"
+fi

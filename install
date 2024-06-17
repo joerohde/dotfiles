@@ -18,7 +18,9 @@ function main {
     CONFIG="install.conf.yaml"
     DOTBOT_DIR="dotbot"
     DOTBOT_BIN="bin/dotbot"
-    BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    BASEDIR="$HOME/MegaSync/dotfiles"
+    [[ -d $BASEDIR ]] || BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
     cd "${BASEDIR}"
     git fetch -q
     if [[ -z ${RESTART} ]]; then
@@ -29,6 +31,12 @@ function main {
 
     git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
     git submodule update --init --recursive "${DOTBOT_DIR}"
+
+    # WSL permissions hack fixup
+    if [[ ! -x "$BASEDIR/local/bin/update" ]]; then
+        chmod u+x -R "$BASEDIR/local/bin/"
+        chmod u+x "$DOTBOT_DIR/$DOTBOT_BIN"
+    fi
 
     if [[ "${UPDATE_ONLY}" != "true" ]]; then
         install python3-pip pip3
@@ -95,6 +103,7 @@ function install() {
     local PACKAGE BINARY INSTALL_CMD
     PACKAGE="$1"
     BINARY="$2"
+    # shellcheck disable=SC2016
     TEST_INSTALL='command -v "${BINARY}"'
 
     case "${UNAME}" in
@@ -131,4 +140,4 @@ function install() {
 
 export DEBIAN_FRONTEND=noninteractive
 main "$@"
-command -v "pwsh" >/dev/null && pwsh -c update
+command -v "pwsh" >/dev/null && pwsh -NoProfile -c ~/MegaSync/dotfiles/Powershell/install.ps1
