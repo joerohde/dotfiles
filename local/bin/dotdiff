@@ -24,6 +24,7 @@ fi
 
 cd "${DOTFILES_DIR}" || die "can't chdir: ${DOTFILES_DIR}"
 
+chmod -R u+w ./.git/
 git fetch && { git rebase || git rebase --abort; }
 
 # GITSTAT=$(git status --porcelain) || die "call to git status failed"
