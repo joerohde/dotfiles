@@ -1,27 +1,50 @@
 #!/bin/bash
 
-uname=$(uname);
+function _fixperms() {
+    local BASEDIR=$(realpath "$(dirname "$(realpath "$HOME/.local/bin/update")")/../..")
+    local CHMOD="chmod"
+    command -v gchmod >/dev/null && CHMOD="gchmod"
+    # verify it's a dir and a subdir of $HOME (and not $HOME itself)
+    if [[ -d "$BASEDIR" && $BASEDIR = $HOME/?* ]]; then
+        # hack to deal with git on a cloud drive which is bad practice to begin with
+        $CHMOD -R u+rwX,go+rX "$BASEDIR"
+        $CHMOD -R u+x "$BASEDIR/local/bin"
+        rm -f "$BASEDIR"/.git/index.lock
+    fi
+}
+
+uname=$(uname)
 case "$uname" in
-    (*Darwin*)
-        dotdiff
-        type -t port >/dev/null && (sudo port -u selfupdate; sudo port -u upgrade outdated)
-        brew update; brew upgrade; brew upgrade --cask; brew cleanup
-        ;;
-    (*Linux*)
-        dotdiff
-        sudo apt-get -y update;       sleep 1
-        sudo apt-get -y dist-upgrade; sleep 1
-        sudo apt-get -y upgrade;      sleep 1
-        sudo apt-get -y autoremove;   sleep 1
-        # checkupdate
-        echo
-        /usr/lib/update-notifier/apt-check --human-readable;
-        cat /var/run/reboot-required 2> /dev/null
-        ;;
-    (*CYGWIN*)
-    (*MINGW*)
-    (*)
-        echo 'error: unsupported platform.'
-        exit 2
-        ;;
-esac;
+*Darwin*)
+    _fixperms
+    dotdiff
+    type -t port >/dev/null && (
+        sudo port -u selfupdate
+        sudo port -u upgrade outdated
+    )
+    brew update
+    brew upgrade
+    brew upgrade --cask
+    brew cleanup
+    ;;
+*Linux*)
+    _fixperms
+    dotdiff
+    sudo apt-get -y update
+    sleep 1
+    sudo apt-get -y dist-upgrade
+    sleep 1
+    sudo apt-get -y upgrade
+    sleep 1
+    sudo apt-get -y autoremove
+    sleep 1
+    # checkupdate
+    echo
+    /usr/lib/update-notifier/apt-check --human-readable
+    cat /var/run/reboot-required 2>/dev/null
+    ;;
+*CYGWIN*|*MINGW*|*)
+    echo 'error: unsupported platform.'
+    exit 2
+    ;;
+esac
