@@ -4,6 +4,7 @@
 [user]
 	name = Joe Rohde
 	email = Joe.Rohde@Gmail.com
+	signingkey = /Users/jrohde/.ssh/id_github.pub
 
 [user "jenkins.jenkins"]
     apitoken = 6df467ce5bf53b546aa15cbee051a6bd
@@ -54,3 +55,9 @@
 	insteadOf = https://github.com/
 [push]
 	autoSetupRemote = true
+[gpg]
+	format = ssh
+[commit]
+	gpgsign = true
+[gpg "ssh"]
+	allowedSignersFile = /Users/jrohde/.ssh/authorized_signers
