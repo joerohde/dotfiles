@@ -249,6 +249,7 @@ function append_path() {
 [[ -r "$HOME/.aliases" ]] && . "$HOME/.aliases"
 [[ -r "$HOME/.functions" ]] && . "$HOME/.functions"
 [[ -r "$HOME/.bashrc.local" ]] && . "$HOME/.bashrc.local"
+[[ -r "$HOME/.bashrc.ignore" ]] && . "$HOME/.bashrc.ignore"
 
 # Add flags to existing aliases.
 alias ls="${aliases[ls]:-ls} --color=always -A"
