@@ -269,3 +269,6 @@ fi
 
 compdef _env goos
 compdef _golang god
+
+alias -g wbd=~/src/wbd
+alias -g mega=~/Megasync
