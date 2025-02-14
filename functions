@@ -5,6 +5,18 @@ function printkv() {
     printf '%40s => %s\n' "${(P@kv)1}"
 }
 
+function gvm() {
+    if [ -n "$1" ]; then
+        if [ -d "$HOME/sdk/go${1}/bin" ]; then
+            # don't worry about GOROOT. Anything not using $(go env) is broken.
+            prepend_path "$HOME/sdk/go${1}/bin"
+        else
+            echo "Go version $1 not installed"
+            echo "Maybe Try: go install golang.org/dl/go${1}@latest"
+        fi
+    fi
+}
+
 fi
 
 function cred() {

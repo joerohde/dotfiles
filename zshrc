@@ -231,19 +231,23 @@ compdef _directories md
 alias tree='tree -a -I .git'
 command -v lsd >/dev/null && alias ls="lsd"
 
-function path_remove() { export PATH=$(echo -n $PATH | awk -v RS=: -v ORS=: '$0 != "'$1'"' | sed 's/:$//'); }
+function path_remove() {
+    path=(${${path:a}:#${1:a}})
+}
+
 function prepend_path() {
-    path_remove "$2"
-    if [[ -d "$2" ]]; then
-        eval "export $1=$2:\$$1"
+    path_remove "$1"
+    if [[ -d "$1" ]]; then
+        path=($1:a $path)
     fi
 }
 function append_path() {
-    path_remove "$2"
-    if [[ -d "$2" ]]; then
-        eval "export $1=\$$1:$2"
+    path_remove "$1"
+    if [[ -d "$1" ]]; then
+        path=($path $1:a)
     fi
 }
+
 
 # These sourced files are bash and zsh compat. No need to emulate in zsh
 [[ -r "$HOME/.aliases" ]] && . "$HOME/.aliases"
@@ -272,3 +276,4 @@ compdef _golang god
 
 alias -g wbd=~/src/wbd
 alias -g mega=~/Megasync
+typeset -aU path
