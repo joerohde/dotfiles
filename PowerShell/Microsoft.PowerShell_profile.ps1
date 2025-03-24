@@ -93,9 +93,9 @@ $slash = [IO.Path]::DirectorySeparatorChar
 $Env:SLASH = $slash
 $Env:ARCH = switch ($os) { 'win' { $Env:PROCESSOR_ARCHITECTURE } default { $(arch) } }
 
-# Do this after radline options. Transient prompt binds Enter key, but 'EditMode emacs' will overwrite/set it also.
+# Do this after readline options. Transient prompt binds Enter key, but 'EditMode emacs' will overwrite/set it also.
 #& $Env:LOCALAPPDATA\Programs\oh-my-posh\bin\oh-my-posh --config "$PSScriptRoot\joe.omp.json" init pwsh | Invoke-Expression
-oh-my-posh completion powershell | Out-String | Invoke-Expression
+#oh-my-posh completion powershell | Out-String | Invoke-Expression #completion command disabled
 & oh-my-posh --config "$PSScriptRoot\joe.omp.json" init pwsh | Invoke-Expression
 $env:POSH_GIT_ENABLED = $true
 
