@@ -1,6 +1,7 @@
 dist
 node_modules
 .vscode-test-web/
+.emacs.d/eln-cache/
 *.vsix
 
 *.local

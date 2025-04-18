@@ -4,7 +4,7 @@
 [user]
 	name = Joe Rohde
 	email = Joe.Rohde@Gmail.com
-	signingkey = /Users/jrohde/.ssh/id_github.pub
+	signingkey = ~/.ssh/id_github.pub
 
 [user "jenkins.jenkins"]
     apitoken = 6df467ce5bf53b546aa15cbee051a6bd

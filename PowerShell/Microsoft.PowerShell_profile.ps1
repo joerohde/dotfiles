@@ -84,7 +84,7 @@ Set-PSReadLineOption `
     -EditMode Emacs `
     -BellStyle Visual `
     -HistorySearchCursorMovesToEnd `
-    -HistoryNoDuplicates `
+    -HistoryNoDuplicates
 
 #Fix up OS differences that are easy
 $os = $IsWindows ? 'win' : $IsMacOS ? 'mac' : 'nix'
@@ -417,7 +417,7 @@ function Restart-Shell() {
 function emacs() {
     [ConvertToWin32Path()]
     param()
-    &"C:\Program Files\Emacs\emacs-29.3_2\bin\emacs.exe" -nw $Args
+    &"C:\Program Files\Emacs\emacs-30.1\bin\emacs.exe" -nw $Args
 }
 
 Join-Path "$PSScriptRoot" "Scripts" | Append-ToSessionPath
@@ -449,6 +449,17 @@ Set-PSReadlineKeyHandler -Key Shift-DownArrow -ScriptBlock { cd_down }
 Set-PSReadlineKeyHandler -Key Tab -ScriptBlock { expand_virtual_drives "MenuComplete" } # Menu-Complete
 Set-PSReadlineKeyHandler -Key Ctrl+Spacebar -ScriptBlock { expand_virtual_drives "Complete" }
 
+if ($env:TERM_PROGRAM -eq "vscode") {
+    # Setting psreadline to Emacs and/or setting keys like Ctrl+Spacebar can cause vscode's
+    # insertion of the SendCompletion handler to be ignored.  If this happens there's a nifty
+    # mess of 'e's getting spewed to the command line.  So re-register it if possible.
+    # function doesn't exist yet most likely.
+
+    #if (Test-Path -Path Function:\Send-Completions) {
+        Set-PSReadLineKeyHandler -Chord 'F12,e' -ScriptBlock { Send-Completions }
+    #}
+}
+
 $process_name = (Get-Process -PID $PID).Name
 $parent_process = (Get-Process -PID $PID).Parent
 $Env:SHLVL = 1
@@ -468,6 +479,16 @@ Remove-Item -force -ErrorAction Ignore alias:ls
 function ls { Get-ChildItem $args | Format-Wide -AutoSize }
 function which { Get-Command $args -all -ErrorAction SilentlyContinue }
 function psport { Get-Process -Id (Get-NetTCPConnection -LocalPort $Args).OwningProcess }
+function winget {
+    $newArgs = $args
+    if ($args[0] -eq "upgrade" -or $args[0] -eq "install" -and $args -notcontains "--help") {
+
+        $newArgs += @("--accept-source-agreements", "--accept-package-agreements")
+
+        #write-host "winget `"$($newArgs -join '" "')`""
+    }
+    & winget.exe $newArgs
+}
 
 (& {
     New-DriveAlias -Name Mega -Scope 1 -Root ~\MegaSync\
