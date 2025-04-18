@@ -417,7 +417,7 @@ function Restart-Shell() {
 function emacs() {
     [ConvertToWin32Path()]
     param()
-    &"C:\Program Files\Emacs\emacs-29.3_2\bin\emacs.exe" -nw $Args
+    &"C:\Program Files\Emacs\emacs-30.1\bin\emacs.exe" -nw $Args
 }
 
 Join-Path "$PSScriptRoot" "Scripts" | Append-ToSessionPath
@@ -468,6 +468,16 @@ Remove-Item -force -ErrorAction Ignore alias:ls
 function ls { Get-ChildItem $args | Format-Wide -AutoSize }
 function which { Get-Command $args -all -ErrorAction SilentlyContinue }
 function psport { Get-Process -Id (Get-NetTCPConnection -LocalPort $Args).OwningProcess }
+function winget {
+    $newArgs = $args
+    if ($args[0] -eq "upgrade" -or $args[0] -eq "install" -and $args -notcontains "--help") {
+
+        $newArgs += @("--accept-source-agreements", "--accept-package-agreements")
+
+        #write-host "winget `"$($newArgs -join '" "')`""
+    }
+    & winget.exe $newArgs
+}
 
 (& {
     New-DriveAlias -Name Mega -Scope 1 -Root ~\MegaSync\
