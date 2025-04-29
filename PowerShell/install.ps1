@@ -88,6 +88,7 @@ switch ($os) {
         Install-MissingPackage -Name "jftuga.less"
         Install-MissingPackage -Name "sharkdp.bat"
         Install-MissingPackage -Name "JanDeDobbeleer.OhMyPosh"
+        Install-MissingPackage -Name "Schniz.fnm" # nvm replacement
     }
     "mac" {
         Install-MissingPackage -Name less

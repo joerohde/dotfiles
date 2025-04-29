@@ -504,4 +504,7 @@ if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
     Update-FormatData -PrependPath "$PSScriptRoot/pwsh_formatting.ps1xml"
 }
 
+#add nvm style autoload on cd
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+
 Update-DirColors ~/.dircolors
