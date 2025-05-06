@@ -481,12 +481,14 @@ function which { Get-Command $args -all -ErrorAction SilentlyContinue }
 function psport { Get-Process -Id (Get-NetTCPConnection -LocalPort $Args).OwningProcess }
 function winget {
     $newArgs = $args
-    if ($args[0] -eq "upgrade" -or $args[0] -eq "install" -and $args -notcontains "--help") {
+    if ($args.Count -gt 1) {
+        if ($args[0] -eq "upgrade" -or $args[0] -eq "install" -and $args -notcontains "--help") {
 
-        $newArgs += @("--accept-source-agreements", "--accept-package-agreements")
+            $newArgs += @("--accept-source-agreements", "--accept-package-agreements")
 
-        #write-host "winget `"$($newArgs -join '" "')`""
+        }
     }
+    #write-host "winget `"$($newArgs -join '" "')`""
     & winget.exe $newArgs
 }
 
@@ -504,7 +506,8 @@ if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
     Update-FormatData -PrependPath "$PSScriptRoot/pwsh_formatting.ps1xml"
 }
 
-#add nvm style autoload on cd
+# add nvm style autoload on cd
+New-Alias -Force -Name fnm -Value "$Env:LOCALAPPDATA\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe\fnm.exe"
 fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 
 Update-DirColors ~/.dircolors
