@@ -1,63 +1,70 @@
 [include]
-	path = ~/.gitconfig.Windows
+path = ~/.gitconfig.Windows
 
 [user]
-	name = Joe Rohde
-	email = Joe.Rohde@Gmail.com
-	signingkey = ~/.ssh/id_github.pub
+name = Joe Rohde
+email = Joe.Rohde@Gmail.com
+signingkey = ~/.ssh/id_github.pub
 
 [user "jenkins.jenkins"]
-    apitoken = 6df467ce5bf53b546aa15cbee051a6bd
+apitoken = 6df467ce5bf53b546aa15cbee051a6bd
 
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+clean = git-lfs clean -- %f
+smudge = git-lfs smudge -- %f
+process = git-lfs filter-process
+required = true
 [gui]
-	fontui = -family \"Helvetica Neue\" -size 13 -weight normal -slant roman -underline 0 -overstrike 0
-	fontdiff = -family Consolas -size 13 -weight normal -slant roman -underline 0 -overstrike 0
-	recentrepo = /Users/jrohde/src/Hadron
+fontui = -family \"Helvetica Neue\" -size 13 -weight normal -slant roman -underline 0 -overstrike 0
+fontdiff = -family Consolas -size 13 -weight normal -slant roman -underline 0 -overstrike 0
+recentrepo = /Users/jrohde/src/Hadron
 [difftool]
-	prompt = false
+prompt = false
 
 [diff]
-	tool = araxis
+tool = araxis
 
 [merge]
-	tool = araxis
+tool = araxis
 
 [core]
-	excludesfile = ~/.gitignore_global
-	autocrlf = input
-	editor = code --wait
-	pager = "bat"
+excludesfile = ~/.gitignore_global
+autocrlf = input
+editor = code --wait
+pager = "bat"
 
 [alias]
-	dt = difftool --tool=araxis --dir-diff
-	dts = difftool --tool=araxis --dir-diff --staged
-	mt = mergetool --tool=araxis --dir-diff
-	mts = mergetool --tool=araxis --dir-diff --staged
-	base = merge-base --fork-point HEAD
-	ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
-	ld = log --pretty=format:"%C(yellow)%h\\ %C(green)%ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short --graph
-	ls = log --pretty=format:"%C(green)%h\\ %C(yellow)[%ad]%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=relative
-	grep = grep -Ii
+dt = difftool --tool=araxis --dir-diff
+dts = difftool --tool=araxis --dir-diff --staged
+mt = mergetool --tool=araxis --dir-diff
+mts = mergetool --tool=araxis --dir-diff --staged
+base = merge-base --fork-point HEAD
+ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
+ld = log --pretty=format:"%C(yellow)%h\\ %C(green)%ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short --graph
+ls = log --pretty=format:"%C(green)%h\\ %C(yellow)[%ad]%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=relative
+grep = grep -Ii
+hide = update-index --assume-unchanged
+unhide = update-index --no-assume-unchanged
+hidden = ! git ls-files -v | grep '^[a-z]' | cut -c3-
+skip = update-index --skip-worktree
+unskip = update-index --no-skip-worktree
+skipped = ! git ls-files -v | grep '^S'
+unskipall = ! git ls-files -v | grep -i '^S' | cut -c 3- | tr '\\012' '\\000' | xargs -0 git update-index --no-skip-worktree
 
 [pull]
-	rebase = true
+rebase = true
 
 [rebase]
-	autoStash = true
-	autosquash = true
+autoStash = true
+autosquash = true
 
 [url "ssh://git@github.com/"]
-	insteadOf = https://github.com/
+insteadOf = https://github.com/
 [push]
-	autoSetupRemote = true
+autoSetupRemote = true
 [gpg]
-	format = ssh
+format = ssh
 [commit]
-	gpgsign = true
+gpgsign = true
 [gpg "ssh"]
-	allowedSignersFile = /Users/jrohde/.ssh/authorized_signers
+allowedSignersFile = /Users/jrohde/.ssh/authorized_signers
