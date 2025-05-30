@@ -473,7 +473,7 @@ while ($null -ne $parent_process) {
 
 $env:PAGER = "bat.exe -p"
 $env:LESS = '-X -i -M -s -S -x4 -j2 -R'
-
+$env:GVM_FORMAT = "powershell"
 
 Remove-Item -force -ErrorAction Ignore alias:ls
 function ls { Get-ChildItem $args | Format-Wide -AutoSize }
@@ -507,7 +507,9 @@ if ($PSVersionTable.PSVersion -ge [version] '7.2.0') {
 }
 
 # add nvm style autoload on cd
-New-Alias -Force -Name fnm -Value "$Env:LOCALAPPDATA\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe\fnm.exe"
+if (-not(Get-Command -Name "fnm" -ErrorAction SilentlyContinue))  {
+    New-Alias -Force -Name fnm -Value "$Env:LOCALAPPDATA\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe\fnm.exe"
+}
 fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 
 Update-DirColors ~/.dircolors
